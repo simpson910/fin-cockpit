@@ -1,0 +1,1933 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="qLRs5JMZHgffHdAtAX8d7n">
+<head data-page-node-id="mDcquIUpvt1IFljs3s2nZf">
+<meta charset="UTF-8" data-page-node-id="rmpLxkvQTur593NSNBewTO">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="nMOdRL1r6XxAXm6DDDpbgA">
+<title>Nexus 财务驾驶舱 · 总看板 Demo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f4f6f9;--card:#fff;--text:#22303f;--muted:#7a8699;--border:#e4e9f0;
+  --blue:#185fa5;--teal:#0f6e56;--coral:#d85a30;--purple:#534ab7;
+  --up:#1d9e75;--down:#c93838;--amber:#ef9f27;--red:#e24b4a;--green:#27874a;
+}
+body{font-family:"Microsoft YaHei",-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5}
+.wrap{max-width:1480px;margin:0 auto;padding:14px}
+/* header */
+.hd{background:#0c447c;color:#fff;border-radius:10px;padding:14px 20px;margin-bottom:12px}
+.hd-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.hd h1{font-size:18px;font-weight:600}
+.hd .demo-tag{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:2px 12px;font-size:12px}
+.hd-note{font-size:12px;color:rgba(255,255,255,.75);margin-top:4px}
+.filters{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:12px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fg label{font-size:11px;color:rgba(255,255,255,.7)}
+.fg select{padding:5px 8px;border:1px solid rgba(255,255,255,.25);border-radius:6px;background:rgba(255,255,255,.12);color:#fff;font-size:12px;min-width:86px}
+.fg select option{background:#0c447c;color:#fff}
+.role-banner{background:#e8f1fb;border:1px solid #b5d4f4;color:#0c447c;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:12px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+/* sections */
+.sec{background:var(--card);border-radius:10px;padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(16,42,67,.06)}
+.sec-hd{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.sec-hd h2{font-size:14px;font-weight:600;color:var(--text)}
+.sec-hd .sub{font-size:12px;color:var(--muted)}
+/* KPI */
+.kpi-grid{display:grid;gap:10px}
+.kpi{display:flex;flex-direction:column;min-height:118px}
+.kpi{border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:relative;cursor:pointer;transition:box-shadow .15s}
+.kpi:hover{box-shadow:0 2px 8px rgba(16,42,67,.12)}
+.kpi .k-label{font-size:12px;color:var(--muted)}
+.kpi .k-tag{font-size:10px;background:#faeeda;color:#854f0b;border-radius:4px;padding:1px 6px;margin-left:4px}
+.kpi .k-note{font-size:10px;color:#a08a6a;margin-left:4px}
+.kpi .k-val{font-size:22px;font-weight:700;margin:3px 0}
+.kpi .k-unit{font-size:11px;color:var(--muted);font-weight:400}
+.kpi .k-cmp{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--muted);flex-wrap:wrap;margin-top:auto;align-items:flex-start}
+.kpi .k-cmp b{font-weight:500}
+.up{color:var(--up)}.down{color:var(--down)}
+.kpi .more-btn{position:absolute;top:10px;right:10px;font-size:11px;color:var(--blue);border:1px solid var(--blue);border-radius:10px;padding:0 8px;background:#fff;cursor:pointer}
+.kpi .more-btn:hover{background:#e8f1fb}
+.kpi.nolink{cursor:default}
+/* table */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:#f0f4f8;color:#54657a;text-align:left;padding:8px 10px;font-weight:600;white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:7px 10px;border-bottom:1px solid #eef1f5;text-align:left;white-space:nowrap}
+.prog{display:block;height:5px;width:100%;max-width:76px;background:#eef1f5;border-radius:3px;margin-top:5px;overflow:hidden}
+.prog-fill{display:block;height:100%;border-radius:3px}
+.prog-fill.g{background:var(--green)}
+.prog-fill.a{background:var(--amber)}
+.prog-fill.r{background:#c93838}
+tbody tr:hover{background:#f7fafc}
+.row-expand{cursor:pointer;color:var(--blue);font-weight:500}
+.dim{color:var(--muted);font-size:11px;display:block}
+.chip-row{display:block;margin-top:3px}
+.chip{display:inline-block;font-size:10.5px;font-weight:500;border-radius:9px;padding:0 7px;line-height:16px;white-space:nowrap}
+.chip.up{background:#e2f5ec;color:#157a58}
+.chip.down{background:#fbe9e9;color:#c93838}
+.light{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px}
+.lg{background:var(--green)}.la{background:var(--amber)}.lr{background:var(--red)}
+.legend{font-size:11px;color:var(--muted);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+/* layout grids */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-2 .sec{margin-bottom:0}
+@media(max-width:1000px){.grid-2{grid-template-columns:1fr}}
+.chart-box{position:relative;height:280px}
+.chart-box.trend-big{height:400px}
+.chart-box.tall{height:300px}
+/* tabs */
+.tabs{display:flex;gap:6px}
+.tab{padding:4px 14px;border:1px solid var(--border);border-radius:16px;background:#fff;color:var(--muted);cursor:pointer;font-size:12px}
+.tab.on{background:var(--blue);border-color:var(--blue);color:#fff}
+/* risk */
+.risk-card{border:1px solid var(--border);border-left:4px solid var(--red);border-radius:8px;padding:10px 14px;margin-bottom:8px;background:#fffaf9}
+.risk-card.warn{border-left-color:var(--amber);background:#fffdf6}
+.risk-card h4{font-size:13px;margin-bottom:3px}
+.risk-card .r-line{font-size:12px;color:#54657a;margin:2px 0}
+.risk-card .r-act{font-size:12px;color:var(--teal);margin-top:4px}
+/* modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(12,30,50,.45);z-index:50;align-items:flex-start;justify-content:center;padding:40px 20px}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;max-width:1100px;width:100%;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.modal-hd{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
+.modal-hd h3{font-size:15px}
+.modal-hd .x{cursor:pointer;font-size:18px;color:var(--muted);border:none;background:none}
+.modal-bd{padding:14px 18px;overflow:auto}
+.modal-ft{padding:10px 18px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+.newtab-note{font-size:11px;color:var(--muted);background:#f0f4f8;border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:10px}
+/* misc */
+.more-link{font-size:12px;color:var(--blue);border:1px solid var(--blue);border-radius:14px;padding:3px 12px;background:#fff;cursor:pointer}
+.more-link:hover{background:#e8f1fb}
+.muted{color:var(--muted)}
+.flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.foot{text-align:center;color:var(--muted);font-size:11px;padding:6px 0 14px}
+.mini-select{padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text)}
+.hint{font-size:11px;color:var(--muted);margin-top:6px}
+/* 利润桥（横向条形列表） */
+.bridge-box{padding:4px 0}
+.bridge{display:flex;flex-direction:column;gap:4px}
+.bridge-row{display:grid;grid-template-columns:150px 1fr 110px;align-items:center;gap:10px}
+.b-label{font-size:12.5px;color:#54657a;white-space:nowrap}
+.b-track{position:relative;height:22px;background:#eef3f9;border-radius:2px}
+.b-bar{position:absolute;top:0;bottom:0;border-radius:2px}
+.b-total{background:#1a2d6b;left:0}
+.b-cost{background:#c93838}
+.b-val{font-size:12px;text-align:right;font-weight:500;color:#22303f}
+.b-val .muted{font-weight:400;margin-left:2px}
+/* 页面切换 */
+.page-tabs{display:flex;gap:8px;margin-bottom:12px}
+.ptab{padding:6px 22px;border-radius:8px;background:#fff;border:1px solid var(--border);color:#54657a;cursor:pointer;font-size:13px;font-weight:500}
+.ptab.on{background:#0c447c;border-color:#0c447c;color:#fff}
+.k-tag2{font-size:10px;background:#e1f5ee;color:#0f6e56;border-radius:4px;padding:1px 6px;margin-left:4px}
+.kpi-biz-title{font-size:12px;color:#0f6e56;font-weight:600;margin:12px 0 6px;padding-left:2px}
+.kpi-biz-note{font-size:11px;color:#8a94a6;font-weight:400;margin-left:8px}
+/* CC 转化漏斗流程图（紧凑靠左，不撑满容器） */
+.cc-funnel{display:flex;align-items:center;gap:8px;margin-top:6px;width:max-content;max-width:100%}
+.funnel-node{flex:0 0 128px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center;background:#fff;display:flex;flex-direction:column;justify-content:center;min-height:70px}
+.funnel-node .fn-label{font-size:11px;color:var(--muted);line-height:1.2}
+.funnel-node .fn-val{font-size:20px;font-weight:700;margin-top:2px;line-height:1.1}
+.funnel-node .fn-yoy{font-size:11px;margin-top:3px;line-height:1.2}
+.funnel-arrow{flex:0 0 116px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:2px;line-height:1.25}
+.funnel-arrow .fa-rate,.funnel-arrow .fa-ratio{font-size:11px;color:var(--muted);white-space:nowrap;text-align:center}
+.funnel-arrow .fa-rate b,.funnel-arrow .fa-ratio b{color:#1d2733;font-size:13px;font-weight:600;margin:0 2px}
+.funnel-arrow .fa-rate .mini-chip,.funnel-arrow .fa-ratio .mini-chip{font-size:10px;padding:1px 5px;border-radius:8px;margin-left:2px}
+.funnel-arrow .fa-rate .mini-chip.up,.funnel-arrow .fa-ratio .mini-chip.up{background:#e2f5ec;color:#157a58}
+.funnel-arrow .fa-rate .mini-chip.down,.funnel-arrow .fa-ratio .mini-chip.down{background:#fbe9e9;color:#c93838}
+.funnel-arrow .fa-line{color:var(--blue);font-size:14px;line-height:1;letter-spacing:-1px;margin:1px 0}
+/* RPO 模块D：比例与差额共用一行，继承主值单位。 */
+#rpo-ka-table .rpo-nfi-cmp,#cc-order-body .rpo-nfi-cmp{display:inline-flex;border-radius:9px;padding:2px 7px;align-items:center;justify-content:flex-start;gap:8px;margin-top:4px;font-size:11px;font-weight:500;line-height:1.4;white-space:nowrap;font-variant-numeric:tabular-nums}
+#rpo-ka-table .rpo-nfi-cmp.up,#cc-order-body .rpo-nfi-cmp.up{background:#e2f5ec;color:#157a58}
+#rpo-ka-table .rpo-nfi-cmp.down,#cc-order-body .rpo-nfi-cmp.down{background:#fbe9e9;color:#c93838}
+#rpo-ka-table .rpo-nfi-diff,#cc-order-body .rpo-nfi-diff{border-left:1px solid #dce2ea;padding-left:8px}
+/* 管理层表格的主值统一顶对齐，同期胶囊置于第二行。 */
+#cc-order-body .cc-management-table td{vertical-align:top;line-height:20px}
+tr.summary-row td{background:#f0f4f8;font-weight:600;border-top:2px solid #dce2ea;vertical-align:top}
+
+[hidden]{display:none!important}
+.multi-select{position:relative;min-width:120px;font-size:12px}
+.multi-trigger{width:100%;min-height:32px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#24364b;text-align:left;white-space:nowrap;cursor:pointer;font:inherit}
+.multi-trigger:focus-visible{outline:2px solid #185fa5;outline-offset:2px}
+.multi-panel{position:absolute;z-index:100;top:calc(100% + 5px);left:0;width:max-content;min-width:220px;max-width:min(360px,85vw);background:#fff;border:1px solid #dce2ea;border-radius:8px;box-shadow:0 8px 24px #16335426;padding:8px}
+.multi-search{box-sizing:border-box;width:100%;padding:7px 9px;border:1px solid #cbd5e1;border-radius:5px;margin-bottom:6px;font:inherit}
+.multi-actions{display:flex;gap:12px;border-bottom:1px solid #eef1f5;padding-bottom:6px;margin-bottom:4px}
+.multi-actions button{border:0;background:none;color:#185fa5;font:inherit;padding:3px;cursor:pointer}
+.multi-list{max-height:230px;overflow:auto}
+.multi-list .multi-option{display:flex;align-items:center;gap:8px;padding:7px 5px;cursor:pointer;color:#24364b;font-size:12px;font-weight:400;margin:0}
+.multi-option:hover{background:#f0f4f8;border-radius:4px}.multi-option input{accent-color:#185fa5;margin:0;flex-shrink:0}
+.multi-empty{padding:14px;color:#7a8699}
+.multi-row{display:flex;align-items:center;gap:2px}
+.multi-row .multi-option{flex:1;min-width:0}
+.multi-toggle{border:0;background:none;color:#7a8699;cursor:pointer;font-size:11px;line-height:1;padding:5px 6px;flex-shrink:0}
+.multi-toggle:hover{color:#185fa5}
+.multi-option.child{padding-left:26px}
+</style>
+</head>
+<body data-page-node-id="lQArUNUZXAEtFMf07DqYxY">
+<div class="wrap" data-page-node-id="ENMEqayRyMrO393AuMPMNB">
+
+  <div class="hd" data-page-node-id="qfT8wxstwH3nv0lAj6tro3">
+    <div class="hd-top" data-page-node-id="pgBDqgQvDslMLiPcpgihzu">
+      <h1 data-page-node-id="SepZP2luDbra9QJ31SP3dn">Nexus 财务驾驶舱</h1>
+      <span class="demo-tag" data-page-node-id="VMdv7iJxAPjySnujPPQMBA">Demo · 模拟数据，仅用于交互演示</span>
+    </div>
+    <div class="hd-note" data-page-node-id="eNgiqEh6UtR0fzBzR9nsIJ">总看板：集团经营健康吗？哪条业务线有问题？ · STF看板：STF 业务线为什么好/差？</div>
+    <div class="filters" data-page-node-id="A06onzVhnSnWxEeOtpSJNW">
+      <div class="fg" data-page-node-id="VwBY3kDNhBUN7xqHhSfdMh"><label data-page-node-id="oePe8UsvU2PMKDHcV9sBGP">角色（演示 RLS）</label>
+        <select id="f-role" data-page-node-id="G5QoZDhjDnNs8zchDz8PjP">
+          <option value="BuLeader" data-page-node-id="JoeVMM9tSa5QuC1fBWs6NC">Bu Leader</option>
+          <option value="TeamLeader" data-page-node-id="61LQBuyggvy9QYLwzTqjvs">Team Leader</option>
+          <option value="SubteamLeader" data-page-node-id="7ODibzHXl6dCCsOrrTfUdU">Subteam Leader</option>
+          <option value="SquadHead" data-page-node-id="FGyke3VFojbR8lNNytLCU0">Squad Head</option>
+        </select>
+      </div>
+      <div class="fg" data-page-node-id="wPGu1DVD61DLWyEeAzpuae"><label data-page-node-id="N7ZGmhMjtG0F9z5a6sTCRe">年份</label>
+        <select id="f-year" data-page-node-id="1jQiufBUqbv20g1TBV4Rs9"><option data-page-node-id="tCOWAHu9qOogKTbmCB5dd2">2025</option><option selected data-page-node-id="X5slFAREpSlg2L6LF4Uvsc">2026</option></select>
+      </div>
+      <div class="fg" data-page-node-id="HqwH5XaTnim8q5KfuXDQPE"><label data-page-node-id="EJ8HJOLs9HAMPwaZyfchr0">月份</label>
+        <select id="f-month" data-page-node-id="7uQAscPtDmoyw8YC2dFKSN"></select>
+      </div>
+      <div class="fg" id="fg-line" data-page-node-id="fowROeoQcTFcEI1ljIgdij"><label data-page-node-id="eFirAfhR8ApOE02O2gfzoa">业务线</label>
+        <select id="f-line" data-page-node-id="XQCd1GeXjv03STtbhhYFVR"></select>
+      </div>
+      <div class="fg" id="fg-bu" data-page-node-id="IbEcSro8Oc8ginYNxrE56j"><label data-page-node-id="0WTiK67S2ebBRuLyA7Jvki">Bu</label>
+        <select id="f-bu" data-page-node-id="2ouJHBg0m32bBRzbw8CeUa"></select>
+      </div>
+      <div class="fg" id="fg-team" data-page-node-id="Ct43i43T3REHHKO09cUY3l"><label data-page-node-id="xuvwqfoMnMGIIPpVSn6LdT">Team / Subteam</label>
+        <select id="f-teamf" data-page-node-id="bOalFc6ctOegEREUnTY1Kr"></select>
+      </div>
+      <div class="fg" id="fg-head" data-page-node-id="zJUWD6gv6htBJ6vSvR6kpI"><label data-page-node-id="VaVKQ6J8y0ahHXOHNIa7U7">负责人</label>
+        <select id="f-headf" data-page-node-id="3spoarGIOPguIjTC2cMoQr"></select>
+      </div>
+      <div class="fg" data-page-node-id="GpvwqU6hkr9BxosBhEtFrO"><label data-page-node-id="5tJADSedHvtqN5FkLTjRPq">UNIT 单位</label>
+        <select id="f-unit" data-page-node-id="Lp2TdE5sbpmIEdfXuGXFRc"><option data-page-node-id="Wd1DfcaLCXFiPCvaU6fWpH">元</option><option selected data-page-node-id="wLbWbUsuMyr8oMMBhKc2wE">千元</option><option data-page-node-id="xDSp4w4PonoU7JSbXNGrvh">万元</option></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="role-banner" id="role-banner" data-page-node-id="98w5pw6HgFJDZUtyhJW9lE"></div>
+
+  <div class="page-tabs" id="page-tabs" data-page-node-id="uM30DijoBGa7MV29DE0Ysm">
+    <span class="ptab on" id="ptab-main" onclick="switchPage('main')" data-page-node-id="hwL7TLfaz7f0WPGNZrkGsd">总看板</span>
+    <span class="ptab" id="ptab-stf" onclick="switchPage('stf')" data-page-node-id="NOP7CJPPUmY963rZseBICU">STF看板</span>
+    <span class="ptab" id="ptab-cc" onclick="switchPage('cc')">CC看板</span>
+    <span class="ptab" id="ptab-rpo" onclick="switchPage('rpo')">RPO看板</span>
+  </div>
+
+  <div class="sec" data-page-node-id="RAGDCTEMv8XKHOKbfEcahD">
+    <div class="sec-hd" data-page-node-id="oT5DjiiUeFSkRuqbJo7mWd">
+      <h2 id="hdr-a" data-page-node-id="0bx9TFADrivBN0J6AySe40">模块A · KPI 卡片</h2>
+      <span class="sub" data-page-node-id="77aFV0WmD9NpkkBWCsB4xl">点击卡片可联动趋势区（方式2 演示，预算进度除外）</span>
+    </div>
+    <div id="kpi-wrap" data-page-node-id="DbDrHa5b8jesEAgwwdPgrf"></div>
+    <div class="hint" style="text-align:right" data-page-node-id="FNzaotuIsAx3QmKUHAIHUB">注：未开票含未关联部分</div>
+  </div>
+
+  <div class="sec" data-page-node-id="9DTivxvUDWkFNrLKTySP2N">
+    <div class="sec-hd" data-page-node-id="UreJT1Ea9QVaLPROsPz11C">
+      <h2 id="hdr-b" data-page-node-id="iwsDWO74yjm4lGAY6xjTr5">模块B · 业务线矩阵</h2>
+      <div class="legend" data-page-node-id="lVRUXz6Xhc6F3rz9pJQrgk">
+        <span data-page-node-id="y3XvkeRMAGa4t6nXQXm10M"><span class="light lg" data-page-node-id="y40URKncliJu8f1hr75mEJ"></span> 健康</span>
+        <span data-page-node-id="HVQAsTH8WxdoUOIlVvb59G"><span class="light la" data-page-node-id="uQlWlE9qF56h3fAMR4EkNf"></span> 关注</span>
+        <span data-page-node-id="4HXkri8GXCNtwHSIYKzxi9"><span class="light lr" data-page-node-id="NuQnh1D230dBs0b7sjhS3G"></span> 风险</span>
+        <span class="muted" data-page-node-id="56gOybZH6WHbqB3jAby7VS">红绿灯为 5.2.4 建议方案演示，点击行可下钻</span>
+      </div>
+    </div>
+    <div id="cc-matrix-controls" style="display:none;margin-bottom:8px;gap:8px;align-items:center"><span class="muted">重点区域</span><select id="cc-regions" class="mini-select" multiple size="2"><option value="嵌入式">嵌入式</option><option value="半导体">半导体</option></select><span class="muted">不选=全部；单击即可选中/取消（无需按 Ctrl），选中区域数据为全量子集</span></div>
+    <div id="cc-matrix-tabs" style="display:none;margin-bottom:8px;gap:6px"><span class="tab on" id="cc-tab-core" onclick="switchCcMatrixTab('core')">核心指标</span><span class="tab" id="cc-tab-biz" onclick="switchCcMatrixTab('biz')">业务线指标</span><span class="tab" id="cc-tab-conv" onclick="switchCcMatrixTab('conv')">转化指标</span></div>
+    <div id="rpo-matrix-tabs" style="display:none;margin-bottom:8px;gap:6px"><span class="tab on" id="rpo-tab-core" onclick="switchRpoMatrixTab('core')">核心指标</span><span class="tab" id="rpo-tab-biz" onclick="switchRpoMatrixTab('biz')">业务线指标</span></div>
+    <div id="stf-matrix-tabs" style="display:none;margin-bottom:8px;gap:6px" data-page-node-id="6Zk7o9t2Ow534M23q1CSVf">
+      <span class="tab on" id="stf-tab-core" onclick="switchStfMatrixTab('core')" data-page-node-id="q6MiCn4xOvMqOu3E8GsO9D">核心指标</span>
+      <span class="tab" id="stf-tab-biz" onclick="switchStfMatrixTab('biz')" data-page-node-id="Luz1tg7xwm9H1Rhm0M28tM">业务线指标</span>
+    </div>
+    <div style="overflow-x:auto" data-page-node-id="8FdZNkcvdoPGAp4C3LiPa6"><table id="matrix" data-page-node-id="FZggBy56AD5ANhkBoMUB8v"></table></div>
+  </div>
+
+  <div class="sec" data-page-node-id="jbBIHjyZyfBVXy2GqZ0H7N">
+      <div class="sec-hd" data-page-node-id="xpDMHf5DNv4C8lBs9zPStb">
+        <h2 id="hdr-c" data-page-node-id="feQ9Rnw4OXbLpCzdGRlps3">模块C · 动态趋势区</h2>
+        <div style="display:flex;gap:8px;align-items:center" data-page-node-id="YkL6ZlVnpqWW9AgZdz3Cph">
+          <select id="f-dim" class="mini-select" data-page-node-id="xqgg4EIkqHnENTZFqB4LD2">
+            <option value="month" data-page-node-id="2P3llwz7YlFyZkZRYFvvP4">月度</option>
+            <option value="quarter" data-page-node-id="exBDvkVSV0PrnXJQ5Juvfn">季度</option>
+          </select>
+          <select id="f-metric" class="mini-select" data-page-node-id="fHYFKKX4oZ2uDXcBBdgjUg"></select>
+        </div>
+      </div>
+      <div class="chart-box trend-big" id="trend-chart" data-page-node-id="07aAf7qJfGEu7vJohTSVBJ"></div>
+      <div class="hint" data-page-node-id="C9ErpyQENmerXAUGdReAmb">时间范围：上一年 + 当前年（截止筛选月份）；粒度：月度/季度；指标范围与模块A一致，剔除预算进度</div>
+  </div>
+
+  <div class="sec cc-only" id="cc-order-sec" style="display:none">
+    <div class="sec-hd"><h2 id="hdr-order">做单情况</h2><div style="display:flex;gap:8px;align-items:center"><select id="cc-order-dim" class="mini-select"><option value="advisor">顾问维度</option><option value="management">管理层维度</option></select><select id="cc-order-metric" class="mini-select"><option value="revenue">收入</option><option value="offer">Offer金额（切分后）</option></select></div></div>
+    <div id="cc-order-body"></div>
+  </div>
+  <div class="sec" data-page-node-id="ug52IEEx9VjMaQaC6Sqnlj">
+    <div class="sec-hd" data-page-node-id="5dfiPN8CbjQjsmf7ZsX8ii">
+      <h2 id="hdr-d" data-page-node-id="koQFwPtJCdehq5HunVgG8E">模块D · 核心客户影响</h2>
+      <div class="flex-between" data-page-node-id="pNQeV5uMC75yCj1YDe4R3h">
+        <div style="display:flex;gap:8px;align-items:center" data-page-node-id="SxYXdBQxPX0G86Js8zEA5g">
+          <select id="f-custline" class="mini-select" data-page-node-id="jYiCf8GnQc33cZCOdUSgZI">
+            <option value="ALL" data-page-node-id="KdEh2zvtiaBEg2P1GPv7Cb">全部业务线</option><option data-page-node-id="4aS1Ggx62RBnegZ7AHbJNN">STF</option><option data-page-node-id="Z7Rp2f42jjvHbYuFTlgRIs">CC</option><option data-page-node-id="1A4tyVoZFrZsmiR3cVlH2O">RPO</option><option data-page-node-id="BpmYOCOTuH5aQ5MOkUfnzn">OS</option>
+          </select>
+          <select id="f-custgroup" class="mini-select" data-page-node-id="rERiFCvS14EvoQI5cBcePz"></select>
+        </div>
+        <button class="more-link" onclick="openCustomerDetail()" data-page-node-id="yHRo2PBhonlIlqcxPVH5Dc">More · 客户明细</button>
+      </div>
+    </div>
+    <div id="rpo-ka-controls" style="display:none;margin-bottom:8px;gap:8px;align-items:center"><span class="muted">KA分类</span><span class="tab" id="rpo-ka-KA" onclick="toggleRpoKa('KA')">KA</span><span class="tab" id="rpo-ka-Others" onclick="toggleRpoKa('Others')">Others</span><span class="muted">支持多选；不选=全部</span></div>
+    <div id="rpo-ka-table" style="display:none;margin-bottom:12px"></div>
+    <div class="grid-2" data-page-node-id="Rn41eeAnkTDQ5iBe3VOwuV">
+      <div data-page-node-id="GgAVEzeFAl7s33iFTLZuyv">
+        <div class="sub muted" style="margin-bottom:6px;font-weight:600" id="cust-share-title" data-page-node-id="D5m88ZnaEke3xqzJkqOccc">内容1 · 客户 NFI 占比（TOP10）</div>
+        <div style="overflow-x:auto" data-page-node-id="wSaT8I7fpHBjoaZlXOdhyF"><table id="cust-share" data-page-node-id="CKmnbJsXdUiCdXaBcfPXKq"></table></div>
+      </div>
+      <div data-page-node-id="RdnP8xrEK5fqS3ONcGCwdB">
+        <div class="flex-between" style="margin-bottom:6px" data-page-node-id="So8yd9ZdK4ed6IfddbAwWL">
+          <span class="muted" style="font-weight:600" id="cust-contrib-title" data-page-node-id="JAvvysAqRg4jyx6AWhcTES">内容2 · 客户贡献</span>
+          <div class="tabs" data-page-node-id="6N7SnhCFJU4zxKfYLe3PQP">
+            <span class="tab on" id="tab-top" onclick="switchCustTab('top')" data-page-node-id="pvNh7cxcFXKOLwjFaAnoUY">TOP 10 增长</span>
+            <span class="tab" id="tab-bottom" onclick="switchCustTab('bottom')" data-page-node-id="5CpClATjRKs03NBEsKoxml">Bottom 10 下滑</span>
+          </div>
+        </div>
+        <div style="overflow-x:auto" data-page-node-id="xUcW50XGETuaqPlhQkrXgS"><table id="cust-tb" data-page-node-id="P1JitenjlqnekWHXN2E6y0"></table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec" data-page-node-id="jzpYhLbwtkiJnrp6FXFQtn">
+    <div class="sec-hd" data-page-node-id="xhttfG7tp2Lhe94jOSrYop">
+      <h2 id="hdr-e" data-page-node-id="apXZ9Z80HqRpZGRphpzWba">模块E · 利润解释桥</h2>
+      <button class="more-link" onclick="openSstReport()" data-page-node-id="MPBpvMhLSrHq43RFnsLYCw">More · SST 管理报告</button>
+    </div>
+    <div class="bridge-box" id="bridge-chart" data-page-node-id="YytlkiXGXBapbW1hZUCH8I"></div>
+  </div>
+
+  <div class="foot" data-page-node-id="1BrqDORByUL2gBPZCaq6DE">Nexus 财务驾驶舱一期 · 交互演示原型 —— 与《4.2 一期开发文档（优化版）》一期模块设计对应 · 数据均为模拟数据；风险提示模块纳入二期</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()" data-page-node-id="tSXD1m05UbLKFXaVAKDfKY">
+  <div class="modal" data-page-node-id="CpYgwoacuMaYVAGRsgcCqi">
+    <div class="modal-hd" data-page-node-id="0nuVJV4kgVtyzDtWcEQORW"><h3 id="modal-title" data-page-node-id="dsisG02As3RmoSEgbmHb7c"></h3><button class="x" onclick="closeModal()" data-page-node-id="2mShAATYDL06piFcD4NjD7">✕</button></div>
+    <div class="modal-bd" id="modal-body" data-page-node-id="EtVDIexARN2mMZdGGYdgo3"></div>
+    <div class="modal-ft" id="modal-foot" data-page-node-id="3fXH3bJWMVynPUxq9NWDHm"></div>
+  </div>
+</div>
+
+<script>
+/* ================= 基础配置 ================= */
+const UNIT_DIV = {'元':10000,'千元':10,'万元':1};
+const SEASON = [0.86,0.88,1.02,0.96,1.0,0.97,0.9,0.94,1.04,1.07,1.10,1.13];
+function idxOf(y,m){return (y-2024)*12+(m-1);}
+function hash(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h;}
+function vary(s){return 0.9+0.22*((hash(s)%1000)/1000);}
+
+/* 业务线口径配置（模拟） */
+const LINE_CFG = {
+  STF:{name:'STF（人力外包）',base:9200,g:0.06,nfiRate:0.26,nfiDrift:0.002,hc:1180,hcG:0.008,od:1350,budgetFactor:0.965,postAdj:0.012,seed:1},
+  CC:{name:'CC（猎头）',base:5600,g:-0.045,nfiRate:0.38,nfiDrift:-0.004,hc:420,hcG:-0.01,od:980,budgetFactor:1.12,postAdj:0.035,seed:2},
+  RPO:{name:'RPO（招聘流程外包）',base:4300,g:0.09,nfiRate:0.30,nfiDrift:0.001,hc:560,hcG:0.012,od:620,budgetFactor:1.0,postAdj:0.02,seed:3},
+  OS:{name:'Oversea（海外）',base:3100,g:0.13,nfiRate:0.33,nfiDrift:0.002,hc:230,hcG:0.015,od:410,budgetFactor:1.03,postAdj:0.025,seed:4},
+  STFOD:{name:'STF-OD',base:2100,g:0.085,nfiRate:0.24,nfiDrift:0.001,hc:260,hcG:0.01,od:380,budgetFactor:1.02,postAdj:0.015,seed:5}
+};
+
+/* 生成 2024-01 ~ 2026-12 共 36 个月模拟序列 */
+const SERIES = {};
+for(const id in LINE_CFG){
+  const c = LINE_CFG[id], S = {rev:[],nfi:[],gp:[],npat:[],nfiRate:[],npatPct:[],npatPost:[],hc:[],cph:[],overdue:[],cumRev:[],cumBud:[],budgetPct:[]};
+  let cr=0,cb=0;
+  for(let i=0;i<36;i++){
+    const trend = c.base*Math.pow(1+c.g,(i-12)/12);
+    const rev = trend*SEASON[i%12]*(1+0.015*Math.sin(i*2.3+c.seed));
+    const rate = c.nfiRate + c.nfiDrift*(i-24)/12 + 0.004*Math.sin(i*0.9+c.seed);
+    const nfi = rev*rate, gp = nfi*0.48, npat = gp*0.57;
+    const hc = Math.round(c.hc*Math.pow(1+c.hcG,i/12)*(1+0.02*Math.sin(i*1.3+c.seed)));
+    const od = c.od*(1+0.1*Math.sin(i*1.1+c.seed))*(id==='CC'&&i>=29?(1+(i-28)*0.18):1);
+    const bud = trend*SEASON[i%12]*c.budgetFactor;
+    cr+=rev; cb+=bud;
+    S.rev.push(rev);S.nfi.push(nfi);S.gp.push(gp);S.npat.push(npat);
+    S.nfiRate.push(nfi/rev);S.npatPct.push(npat/rev);S.npatPost.push(npat/rev-c.postAdj);
+    S.hc.push(hc);S.cph.push(nfi/hc);S.overdue.push(od);
+    S.cumRev.push(cr);S.cumBud.push(cb);S.budgetPct.push(cr/cb);
+  }
+  SERIES[id]=S;
+}
+
+/* 组织层级（模拟） */
+const HIER = {
+  STF:{bus:[
+    {name:'华东Bu',w:.52,teams:[{name:'上海团队',w:.55,subs:['静安组','浦东组']},{name:'苏南团队',w:.45,subs:['苏州组','无锡组']}]},
+    {name:'华北Bu',w:.48,teams:[{name:'北京团队',w:.5,subs:['朝阳组','海淀组']},{name:'天津团队',w:.5,subs:['和平组','河西组']}]}]},
+  CC:{bus:[
+    {name:'金融Bu',w:.55,teams:[{name:'金融猎一',w:.5,subs:['银行组','证券组']},{name:'金融猎二',w:.5,subs:['保险组','基金组']}]},
+    {name:'互联网Bu',w:.45,teams:[{name:'互联网猎一',w:.5,subs:['大厂组','中厂组']},{name:'互联网猎二',w:.5,subs:['电商组','游戏组']}]}]},
+  RPO:{bus:[
+    {name:'大客户Bu',w:.6,teams:[{name:'KA一组',w:.5,subs:['KA-A','KA-B']},{name:'KA二组',w:.5,subs:['KA-C','KA-D']}]},
+    {name:'区域Bu',w:.4,teams:[{name:'华东团队',w:.5,subs:['宁杭组','皖南组']},{name:'华南团队',w:.5,subs:['广深组','珠莞组']}]}]},
+  OS:{bus:[
+    {name:'亚太Bu',w:.55,teams:[{name:'新加坡团队',w:.5,subs:['SG-1','SG-2']},{name:'中国香港团队',w:.5,subs:['HK-1','HK-2']}]},
+    {name:'欧美Bu',w:.45,teams:[{name:'伦敦团队',w:.5,subs:['LDN-1','LDN-2']},{name:'悉尼团队',w:.5,subs:['SYD-1','SYD-2']}]}]},
+  STFOD:{bus:[
+    {name:'OD-华东Bu',w:.55,teams:[{name:'OD-上海团队',w:.55,subs:['OD-静安组','OD-浦东组']},{name:'OD-苏南团队',w:.45,subs:['OD-苏州组','OD-无锡组']}]},
+    {name:'OD-华北Bu',w:.45,teams:[{name:'OD-北京团队',w:.5,subs:['OD-朝阳组','OD-海淀组']},{name:'OD-天津团队',w:.5,subs:['OD-和平组','OD-河西组']}]}]}
+};
+
+/* 角色配置（演示 RLS） */
+const ROLES = {
+  BuLeader:{label:'Bu Leader',kpi:9,startLevel:'team',lines:['STF','CC','RPO','OS'],scope:'全部业务线（演示假设集团 Bu Leader）'},
+  TeamLeader:{label:'Team Leader',kpi:8,startLevel:'subteam',lines:['STF'],scope:'STF 业务线（演示辖 STF）'},
+  SubteamLeader:{label:'Subteam Leader',kpi:8,startLevel:'subteam',lines:['CC'],scope:'CC · 金融Bu（演示辖金融Bu）'},
+  SquadHead:{label:'Squad Head',kpi:8,startLevel:'subteam',lines:['CC'],scope:'CC · 金融Bu · 金融猎一（演示辖金融猎一）'}
+};
+
+/* 客户数据（模拟） */
+const CUSTOMERS = [
+  {name:'远景智造集团',line:'STF',nfi:415,yoy:.22,mom:.05,cnt:8,gNew:'老客',lNew:'老客',nature:'民营企业',city:'上海',team:'上海团队',sub:'静安组'},
+  {name:'蓝海信息技术',line:'CC',nfi:362,yoy:-.08,mom:-.03,cnt:5,gNew:'老客',lNew:'老客',nature:'外资企业',city:'北京',team:'金融猎一',sub:'银行组'},
+  {name:'星辰电商股份',line:'CC',nfi:298,yoy:.15,mom:.04,cnt:6,gNew:'新客',lNew:'新客',nature:'民营企业',city:'杭州',team:'互联网猎一',sub:'电商组'},
+  {name:'宏图金融集团',line:'CC',nfi:287,yoy:-.12,mom:-.06,cnt:9,gNew:'老客',lNew:'老客',nature:'国有企业',city:'上海',team:'金融猎二',sub:'证券组'},
+  {ka:'KA',name:'云帆物流科技',line:'RPO',nfi:244,yoy:.31,mom:.09,cnt:7,gNew:'新客',lNew:'老客',nature:'民营企业',city:'深圳'},
+  {ka:'KA',name:'博雅教育集团',line:'RPO',nfi:198,yoy:.06,mom:.02,cnt:4,gNew:'老客',lNew:'新客',nature:'民营企业',city:'成都'},
+  {name:'天工重型装备',line:'STF',nfi:186,yoy:-.05,mom:.01,cnt:11,gNew:'老客',lNew:'老客',nature:'国有企业',city:'沈阳',team:'北京团队',sub:'朝阳组'},
+  {name:'启润国际贸易',line:'STF',nfi:172,yoy:.11,mom:.03,cnt:5,gNew:'老客',lNew:'老客',nature:'外资企业',city:'广州',team:'上海团队',sub:'浦东组'},
+  {ka:'Others',name:'峰行新能源汽车',line:'RPO',nfi:165,yoy:.44,mom:.12,cnt:6,gNew:'新客',lNew:'新客',nature:'民营企业',city:'合肥'},
+  {name:'安诺医疗器械',line:'CC',nfi:154,yoy:.09,mom:-.02,cnt:3,gNew:'老客',lNew:'新客',nature:'外资企业',city:'苏州',team:'互联网猎二',sub:'大厂组'},
+  {name:'迅达通信科技',line:'STF',nfi:148,yoy:.02,mom:.04,cnt:7,gNew:'老客',lNew:'老客',nature:'国有企业',city:'深圳',team:'苏南团队',sub:'苏州组'},
+  {name:'睿见管理咨询',line:'OS',nfi:132,yoy:.18,mom:.06,cnt:2,gNew:'新客',lNew:'新客',nature:'外资企业',city:'新加坡'},
+  {name:'途乐文旅集团',line:'OS',nfi:118,yoy:-.06,mom:-.04,cnt:3,gNew:'老客',lNew:'老客',nature:'民营企业',city:'中国香港'},
+  {name:'铭泰能源科技',line:'STF',nfi:106,yoy:.07,mom:.02,cnt:6,gNew:'老客',lNew:'老客',nature:'国有企业',city:'西安',team:'北京团队',sub:'海淀组'},
+  {ka:'Others',name:'丰禾智慧农业',line:'RPO',nfi:92,yoy:-.10,mom:-.05,cnt:3,gNew:'新客',lNew:'新客',nature:'民营企业',city:'济南'},
+  {name:'悦居地产集团',line:'CC',nfi:88,yoy:-.18,mom:-.09,cnt:4,gNew:'老客',lNew:'老客',nature:'民营企业',city:'武汉',team:'金融猎二',sub:'基金组'}
+];
+
+const METRICS = {
+  rev:{label:'Rev',money:1},nfi:{label:'NFI',money:1},nfiRate:{label:'NFI%',pct:1},
+  npatPct:{label:'NPAT%（二次亏损前）',pct:1},npatPost:{label:'NPAT% 二次亏损后',pct:1},
+  hc:{label:'前台HC（人）',num:1},cph:{label:'前台人效',money:1},overdue:{label:'逾期 & 未开票',money:1},
+  odHCPoint:{label:'外包时点在职人数（人）',num:1},odHC:{label:'外包日均在职人数（人）',num:1},netAdd:{label:'外包净增人数（人）',num:1},
+  loss:{label:'总损耗金额',money:1},lossRate:{label:'总损耗NFI占比',pct:1},
+  offerAmt:{label:'Offer金额',money:1},offerCount:{label:'Offer数',num:1},offerAvg:{label:'Offer均价',money:1},offerPerHC:{label:'人均Offer金额',money:1},reportCount:{label:'报告数',num:1},interviewCount:{label:'一面数',num:1},reportToInterview:{label:'报告→一面转化率',pct:1},interviewToOffer:{label:'一面→Offer转化率',pct:1},reportPerInterview:{label:'报告/一面比',ratio:1},interviewPerOffer:{label:'一面/Offer比',ratio:1},fixedRev:{label:'固定收费收入',money:1},varRev:{label:'变动收费收入',money:1},monthlyOnsite:{label:'月均onsite',num:1,unit:'人'}
+};
+const BASE_METRICS = ['rev','nfi','nfiRate','npatPct','npatPost','hc','cph','overdue'];
+const CC_METRICS = ['offerAmt','offerCount','offerAvg','offerPerHC','reportCount','interviewCount','reportToInterview','interviewToOffer','reportPerInterview','interviewPerOffer'];
+const RPO_METRICS = ['fixedRev','varRev','monthlyOnsite'];
+function pageMetricKeys(){return (state.page==='stf'?BASE_METRICS.concat(['odHCPoint','odHC','netAdd','loss','lossRate']):state.page==='cc'?BASE_METRICS.concat(CC_METRICS):state.page==='rpo'?BASE_METRICS.concat(RPO_METRICS):BASE_METRICS).filter(k=>k!=='npatPost'||state.role==='BuLeader');}
+function pageMetricSet(){return new Set(pageMetricKeys());}
+
+/* ================= 状态 ================= */
+const state = {role:'BuLeader',unit:'千元',year:2026,month:8,line:'ALL',bu:'ALL',team:'ALL',head:'ALL',custGroup:'ALL',metric:'rev',trendDim:'month',custLine:'ALL',custTab:'top',page:'main',stfTeam:'ALL',ccTeam:'ALL',stfMatrixTab:'core',ccMatrixTab:'core',ccRegions:[],ccOrderTab:'top',ccOrderShowAll:false,ccOrderExpanded:new Set(),rpoKa:[],rpoMatrixTab:'core',rpoKaTab:'ka',rpoTeam:'ALL'};
+const expanded = new Set();
+
+/* 负责人数据（模拟） */
+const SUR = ['张','王','李','赵','刘','陈','杨','黄','周','吴','徐','孙','马','朱','胡','郭'];
+const GIV = ['伟','芳','娜','敏','静','磊','军','洋','勇','艳','杰','娟','涛','明','超','霞'];
+const HEADS = [];
+(function genHeads(){
+  for(const id in HIER){
+    for(const b of HIER[id].bus){
+      const h1 = hash(id+b.name);
+      HEADS.push({id:'H|'+id+'|'+b.name, name:SUR[h1%16]+GIV[(h1>>>4)%16], org:b.name, level:'Bu_head', line:id, bu:b.name, team:null, sub:null});
+      for(const t of b.teams){
+        const h2 = hash(id+b.name+t.name);
+        HEADS.push({id:'H|'+id+'|'+b.name+'|'+t.name, name:SUR[h2%16]+GIV[(h2>>>4)%16], org:t.name, level:'Team_head', line:id, bu:b.name, team:t.name, sub:null});
+        for(const s of t.subs){
+          const h3 = hash(id+b.name+t.name+s);
+          HEADS.push({id:'H|'+id+'|'+b.name+'|'+t.name+'|'+s, name:SUR[h3%16]+GIV[(h3>>>4)%16], org:s, level:'Subteam_Head', line:id, bu:b.name, team:t.name, sub:s});
+        }
+      }
+    }
+  }
+})();
+
+/* ================= 工具 ================= */
+function fmtMoney(v){ // v 单位：万元
+  const d = UNIT_DIV[state.unit];
+  return Math.round(v*d).toLocaleString('zh-CN');
+}
+function fmtMoney2(v){return (Math.round(v*UNIT_DIV[state.unit]*10)/10).toLocaleString('zh-CN');}
+function fmtPct(v){return (v*100).toFixed(1)+'%';}
+function fmtPp(v){return (v>=0?'+':'')+(v*100).toFixed(1)+'pp';}
+function fmtYoY(v){return (v>=0?'+':'')+(v*100).toFixed(1)+'%';}
+function cls(v){return v>=0?'up':'down';}
+function yoySpan(v,extra){return `<span class="${cls(v)}">${fmtYoY(v)}${extra||''}</span>`;}
+function yoyChip(v,pp){const arrow=v>=0?'▲':'▼';return `<span class="chip-row"><span class="chip ${cls(v)}">${arrow} ${pp?fmtPp(v):fmtYoY(v)}</span></span>`;}
+
+function visibleLines(){return roleLines().filter(id=>selected('line',id));}
+function teamFactorIn(id,name){return HIER[id].bus.reduce((v,b)=>v+b.teams.reduce((v,t)=>v+(t.name===name?b.w*t.w:t.subs.includes(name)?b.w*t.w/t.subs.length:0),0),0);}
+function headFilter(){return multiState.head.length===1?HEADS.find(h=>h.id===multiState.head[0]):null;}
+function lineFactor(id){return orgLeaves(id).reduce((v,l)=>v+l.w,0);}
+function activeLines(){return visibleLines().filter(id=>lineFactor(id)>0);}
+function pageLines(){return basePageLines().filter(id=>lineFactor(id)>0);}
+function pageFactor(id){
+  return lineFactor(id);
+}
+function monthAggAt(i){
+  const a = {rev:0,nfi:0,gp:0,npat:0,hc:0,overdue:0,cumRev:0,cumBud:0,hcPrev:0,budgetAmount:0};
+  for(const id of pageLines()){
+    const f = pageFactor(id), S = SERIES[id];
+    a.rev+=S.rev[i]*f; a.nfi+=S.nfi[i]*f; a.gp+=S.gp[i]*f; a.npat+=S.npat[i]*f;
+    a.hc+=S.hc[i]*f; a.overdue+=S.overdue[i]*f;
+    a.hcPrev+=(i>=12?S.hc[i-12]:S.hc[i])*f;
+    a.budgetAmount+=(S.cumBud[i]-(i?S.cumBud[i-1]:0))*f;
+    a.cumRev+=S.cumRev[i]*f; a.cumBud+=S.cumBud[i]*f;
+  }
+  a.nfiRate = a.rev?a.nfi/a.rev:0; a.npatPct = a.rev?a.npat/a.rev:0; a.npatPost = a.rev?pageLines().reduce((v,id)=>v+SERIES[id].npatPost[i]*SERIES[id].rev[i]*pageFactor(id),0)/a.rev:0;
+  a.cph = a.hc?a.nfi/a.hc:0; a.budgetPct = a.budgetAmount?a.rev/a.budgetAmount:0;
+  a.overdueAmt = a.overdue*0.6; a.unbilled = a.overdue*0.4;
+  a.odHCPoint = a.hc*0.82*(1+0.015*Math.sin(i*1.7+0.5));
+  a.odHC = a.hc*0.82; a.netAdd = (a.hc-a.hcPrev)*0.82;
+  a.loss = a.nfi*(0.028+0.004*Math.sin(i*0.7)); a.lossRate = a.nfi?a.loss/a.nfi:0;
+  a.offerAmt = a.rev*0.19; a.offerCount = Math.round(a.hc*0.16); a.offerAvg = a.offerCount?a.offerAmt/a.offerCount:0; a.offerPerHC = a.hc?a.offerAmt/a.hc:0;
+  a.reportCount = Math.round(a.offerCount*5.8); a.interviewCount = Math.round(a.offerCount*2.4); a.reportToInterview = a.reportCount?a.interviewCount/a.reportCount:0; a.interviewToOffer = a.interviewCount?a.offerCount/a.interviewCount:0;
+  a.reportPerInterview = a.interviewCount?a.reportCount/a.interviewCount:0; a.interviewPerOffer = a.offerCount?a.interviewCount/a.offerCount:0;
+  a.offerCount=pageLines().reduce((v,id)=>v+Math.round(SERIES[id].hc[i]*.16)*pageFactor(id),0);
+  a.reportCount=pageLines().reduce((v,id)=>v+Math.round(Math.round(SERIES[id].hc[i]*.16)*5.8)*pageFactor(id),0);
+  a.interviewCount=pageLines().reduce((v,id)=>v+Math.round(Math.round(SERIES[id].hc[i]*.16)*2.4)*pageFactor(id),0);
+  a.offerAvg=a.offerCount?a.offerAmt/a.offerCount:0;
+  a.reportToInterview=a.reportCount?a.interviewCount/a.reportCount:0;
+  a.interviewToOffer=a.interviewCount?a.offerCount/a.interviewCount:0;
+  a.reportPerInterview=a.interviewCount?a.reportCount/a.interviewCount:0;
+  a.interviewPerOffer=a.offerCount?a.interviewCount/a.offerCount:0;
+  a.fixedRev = a.rev*0.55; a.varRev = a.rev*0.45; a.monthlyOnsite = a.hc*0.32;
+  return a;
+}
+function curIdx(){return idxOf(+state.year,+state.month);}
+function getAgg(){
+  const i = curIdx(), a = aggAt(i);
+  const y = i>=12?aggAt(i-12):null, m = i>=1?aggAt(i-1):null;
+  return {a,y,m};
+}
+function unitLabel(){return state.unit;}
+
+/* ================= 筛选器 ================= */
+function initFilters(){
+  const ms = document.getElementById('f-month');
+  for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=m;o.textContent=m+'月';if(m===8)o.selected=true;ms.appendChild(o);}
+  document.getElementById('f-unit').onchange = e=>{state.unit=e.target.value;renderAll();};
+  document.getElementById('f-metric').onchange = e=>{state.metric=e.target.value;renderTrend();};
+  document.getElementById('f-dim').onchange = e=>{state.trendDim=e.target.value;renderTrend();};
+  document.getElementById('cc-order-dim').onchange = e=>{state.ccOrderExpanded.clear();state.ccOrderTab='top';state.ccOrderShowAll=false;renderCcOrder();};
+  document.getElementById('cc-order-metric').onchange = e=>{state.ccOrderExpanded.clear();state.ccOrderShowAll=false;renderCcOrder();};
+  (function(){
+    const sel=document.getElementById('cc-regions');
+    if(!sel) return;
+    // 单击切换选中/取消（无需 Ctrl）
+    sel.addEventListener('mousedown',function(e){
+      if(e.target.tagName!=='OPTION') return;
+      e.preventDefault();
+      const opt=e.target;
+      opt.selected=!opt.selected;
+      state.ccRegions=[...sel.selectedOptions].map(o=>o.value);
+      renderMatrix();
+    });
+    sel.onchange=e=>{state.ccRegions=[...e.target.selectedOptions].map(o=>o.value);renderMatrix();};
+  })();
+  document.getElementById('f-custline').onchange = e=>{
+    if(state.page==='stf') state.stfTeam=e.target.value;
+    else if(state.page==='cc') state.ccTeam=e.target.value;
+    else if(state.page==='rpo') state.rpoTeam=e.target.value;
+    else state.custLine=e.target.value;
+    renderCustomers();
+  };
+}
+
+function refreshCustFilter(){
+  const sel = document.getElementById('f-custline');
+  const teamMode = ['stf','cc','rpo'].includes(state.page);
+  const prev = teamMode ? (state.page==='stf'?state.stfTeam:state.page==='rpo'?state.rpoTeam:state.ccTeam) : state.custLine;
+  sel.innerHTML = '';
+  if(teamMode){
+    const o=document.createElement('option');o.value='ALL';o.textContent='全部团队';sel.appendChild(o);
+    const ids = state.page==='stf'?['STF','STFOD']:state.page==='rpo'?['RPO']:['CC'];
+    for(const id of ids){
+      for(const b of HIER[id].bus){
+        for(const t of b.teams){
+          const o1=document.createElement('option');o1.value=t.name;o1.textContent=t.name;sel.appendChild(o1);
+          for(const s of t.subs){const o2=document.createElement('option');o2.value=s;o2.textContent='└ '+s;sel.appendChild(o2);}
+        }
+      }
+    }
+    const can = (state.role==='BuLeader'||state.role==='TeamLeader');
+    sel.disabled = !can;
+    sel.title = can?'':'按规则仅 Bu Leader / Team Leader 可筛选团队维度';
+  } else {
+    sel.disabled = false; sel.title='';
+    const opts = [['ALL','全部业务线'],['STF','STF'],['CC','CC'],['RPO','RPO'],['OS','Oversea']];
+    for(const [v,t] of opts){const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o);}
+  }
+  const vals = [...sel.options].map(o=>o.value);
+  const cur = vals.includes(prev)?prev:'ALL';
+  sel.value = cur;
+  if(state.page==='stf') state.stfTeam=cur; else if(state.page==='cc') state.ccTeam=cur; else if(state.page==='rpo') state.rpoTeam=cur; else state.custLine=cur;
+}
+
+/* ================= 模块A KPI ================= */
+function moreAction(m){
+  return m==='hc'?'openHcDetail()':m==='overdue'?'openOverdueDetail()':m==='netAdd'?'openNetAddDetail()':m==='loss'?'openLossDetail()':'';
+}
+function fmtDiff(c,d){
+  const sign = d>=0?'+':'';
+  return c.num?sign+Math.round(d).toLocaleString('zh-CN'):sign+fmtMoney2(d);
+}
+function renderKPIs(){
+  const {a,y,m} = getAgg();
+  const isBu = state.role==='BuLeader';
+  const isStf = state.page==='stf';
+  const pset = pageMetricSet();
+  const cards = [
+    {key:'rev',label:'Rev'},
+    {key:'nfi',label:'NFI'},
+    {key:'nfiRate',label:'NFI%',pct:1},
+    {key:'budgetPct',label:'预算进度',pct:1,noCmp:1,nolink:1},
+    {key:'npatPct',label:'NPAT%',pct:1},
+  ];
+  if(isBu) cards.push({key:'npatPost',label:'NPAT%',tag:'二次亏损后',pct:1});
+  if(isStf){
+    cards.push(
+      {key:'hc',label:'前台HC',num:1,more:'hc'},
+      {key:'cph',label:'前台人效'},
+      {key:'overdueAmt',label:'逾期金额',more:'overdue'},
+      {key:'unbilled',label:'未开票金额',more:'overdue'}
+    );
+  } else {
+    cards.push(
+      {key:'hc',label:'前台HC',num:1,more:'hc'},
+      {key:'cph',label:'前台人效'},
+      {key:'overdue',label:'逾期 & 未开票',more:'overdue'}
+    );
+  }
+  const showDiff = {rev:1,nfi:1,hc:1,cph:1,overdue:1,overdueAmt:1,unbilled:1,odHCPoint:1,odHC:1,netAdd:1,loss:1,offerAmt:1,offerCount:1,offerAvg:1,offerPerHC:1,fixedRev:1,varRev:1,monthlyOnsite:1};
+  const cardHtml = c=>{
+    const v = a[c.key];
+    let valHtml, unitHtml = '';
+    if(c.pct){valHtml = fmtPct(v);}
+    else if(c.ratio){valHtml = fmtRatio(v);}
+    else if(c.num){valHtml = Math.round(v).toLocaleString('zh-CN');unitHtml=' '+(c.unit||'人');}
+    else {valHtml = fmtMoney(v);unitHtml = ' '+unitLabel();}
+    let cmpHtml = '<span class="muted">—</span><span class="muted">—</span>';
+    if(!c.noCmp){
+      const parts = [];
+      if(y){
+        let yoyHtml;
+        if(c.pct){yoyHtml = `<span class="${cls(v-y[c.key])}">${fmtPp(v-y[c.key])}</span>`;}
+        else if(c.ratio){const d=v-y[c.key];yoyHtml = `<span class="chip ${cls(d)}">同期 ${fmtRatio(y[c.key])}</span>`;}
+        else{
+          const r = y[c.key]?(v/y[c.key]-1):0;
+          yoyHtml = yoySpan(r, showDiff[c.key]?` <span class="muted">(${fmtDiff(c,v-y[c.key])})</span>`:'');
+        }
+        parts.push(`<span>同比 <b>${yoyHtml}</b></span>`);
+      }
+      if(m){
+        let momHtml;
+        if(c.pct){momHtml = `<span class="${cls(v-m[c.key])}">${fmtPp(v-m[c.key])}</span>`;}
+        else if(c.ratio){const d=v-m[c.key];momHtml = `<span class="${cls(d)}">${(d>=0?'+':'')+d.toFixed(1)}</span>`;}
+        else{
+          const r = m[c.key]?(v/m[c.key]-1):0;
+          momHtml = yoySpan(r, showDiff[c.key]?` <span class="muted">(${fmtDiff(c,v-m[c.key])})</span>`:'');
+        }
+        parts.push(`<span>环比 <b>${momHtml}</b></span>`);
+      }
+      cmpHtml = parts.join('');
+    }
+    const moreBtn = c.more?`<button class="more-btn" onclick="event.stopPropagation();${moreAction(c.more)}">More</button>`:'';
+    const clickable = pset.has(c.key);
+    return `<div class="kpi ${clickable?'':'nolink'}" ${clickable?`onclick="kpiClick('${c.key}')"`:''} title="${clickable?'点击联动趋势区':''}">
+      <div class="k-label">${c.label}${c.tag?`<span class="k-tag">${c.tag}</span>`:''}</div>
+      <div class="k-val">${valHtml}<span class="k-unit">${unitHtml}</span></div>
+      <div class="k-cmp">${cmpHtml}</div>${moreBtn}
+    </div>`;
+  };
+  let html;
+  if(state.page==='cc'){
+    const ccBiz=[{key:'offerAmt',label:'Offer金额'},{key:'offerCount',label:'人均月均Offer数',num:1,unit:'个'},{key:'offerAvg',label:'Offer均价'},{key:'offerPerHC',label:'人均Offer金额'}];
+    const ccConv=[{key:'reportCount',label:'报告数',num:1},{key:'interviewCount',label:'一面数',num:1},{key:'reportToInterview',label:'报告→一面转化率',pct:1},{key:'interviewToOffer',label:'一面→Offer转化率',pct:1},{key:'reportPerInterview',label:'报告/一面比',ratio:1},{key:'interviewPerOffer',label:'一面/Offer比',ratio:1}];
+    const coreCards=cards.filter(c=>c.key!=='overdue').map(c=>{if(c.key==='hc')return{...c,label:'前后台HC'};if(c.key==='cph')return{...c,label:'综合人效'};return c;}).concat([{key:'overdue',label:'逾期金额',more:'overdue'}]);
+    const row1=coreCards.slice(0,5), row2=coreCards.slice(5), N=5, cols=`grid-template-columns:repeat(${N},1fr)`;
+    const ccNote = selectedPeriods().includes(idxOf(2026,8)) ? '<span class="kpi-biz-note">当月数据截止至T-1天</span>' : '';
+    html=`<div class="kpi-grid" style="${cols}">${row1.map(cardHtml).join('')}</div><div class="kpi-grid" style="${cols};margin-top:10px">${row2.map(cardHtml).join('')}</div><div class="kpi-biz-title">业务线指标（CC）${ccNote}</div><div class="kpi-grid" style="${cols}">${ccBiz.map(cardHtml).join('')}</div><div class="kpi-biz-title">转化指标（CC）${ccNote}</div>${ccFunnelHtml(a,y,m)}`;
+  } else if(state.page==='rpo'){
+    const rpoBiz=[{key:'fixedRev',label:'固定收费收入'},{key:'varRev',label:'变动收费收入'},{key:'monthlyOnsite',label:'月均onsite',num:1,unit:'人'}];
+    const coreCards=cards.filter(c=>c.key!=='overdue').map(c=>{if(c.key==='hc')return{...c,label:'前后台HC'};if(c.key==='cph')return{...c,label:'综合人效'};return c;}).concat([{key:'overdue',label:'逾期金额',more:'overdue'}]);
+    const row1=coreCards.slice(0,5), row2=coreCards.slice(5), N=5, cols=`grid-template-columns:repeat(${N},1fr)`;
+    html=`<div class="kpi-grid" style="${cols}">${row1.map(cardHtml).join('')}</div><div class="kpi-grid" style="${cols};margin-top:10px">${row2.map(cardHtml).join('')}</div><div class="kpi-biz-title">业务线指标（RPO）</div><div class="kpi-grid" style="${cols}">${rpoBiz.map(cardHtml).join('')}</div>`;
+  } else if(isStf){
+    const row1 = cards.slice(0,5), row2 = cards.slice(5);
+    const N = Math.max(row1.length,row2.length);
+    const cols = `grid-template-columns:repeat(${N},1fr)`;
+    const biz = [
+      {key:'odHCPoint',label:'外包时点在职人数',num:1},
+      {key:'odHC',label:'外包日均在职人数',num:1},
+      {key:'netAdd',label:'外包净增人数',num:1,more:'netAdd'},
+      {key:'loss',label:'总损耗金额',more:'loss'},
+      {key:'lossRate',label:'总损耗NFI占比',pct:1}
+    ];
+    html = `<div class="kpi-grid" style="${cols}">${row1.map(cardHtml).join('')}</div>
+      <div class="kpi-grid" style="${cols};margin-top:10px">${row2.map(cardHtml).join('')}</div>
+      <div class="kpi-biz-title">业务线指标（STF）</div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">${biz.map(cardHtml).join('')}</div>`;
+  } else {
+    const row1 = isBu ? cards.slice(0,5) : cards.slice(0,4);
+    const row2 = isBu ? cards.slice(5) : cards.slice(4);
+    const N = Math.max(row1.length, row2.length);
+    const cols = `grid-template-columns:repeat(${N},1fr)`;
+    html = `<div class="kpi-grid" style="${cols}">${row1.map(cardHtml).join('')}</div><div class="kpi-grid" style="${cols}">${row2.map(cardHtml).join('')}</div>`;
+  }
+  document.getElementById('kpi-wrap').innerHTML = html;
+}
+/* CC 转化漏斗流程图：报告数 →[报告→一面率 & 报告/一面比]→ 一面数 →[一面→Offer率 & 一面/Offer比]→ Offer数 */
+function ccFunnelHtml(a,y,m){
+  const numChip=(cur,prev)=>prev?yoyChip(cur/prev-1):'';
+  const yChip=v=>v==null?'':Math.abs(v)<0.05?'0.0':(v>0?'+':'')+v.toFixed(1);
+  const ppChip=v=>v==null?'':`<span class="mini-chip ${cls(v)}">${fmtPp(v)}</span>`;
+  const node=(label,val,yoyHtml)=>`<div class="funnel-node"><div class="fn-label">${label}</div><div class="fn-val">${val}</div><div class="fn-yoy">${yoyHtml||'—'}</div></div>`;
+  const arrow=(rateLabel,rateVal,rateY,ratioLabel,ratioVal,ratioSame,ratioCur)=>`<div class="funnel-arrow"><div class="fa-rate">${rateLabel} <b>${rateVal}</b>${ppChip(rateY)}</div><div class="fa-line">──────▶</div><div class="fa-ratio">${ratioLabel} <b>${ratioVal}</b>${ratioSame!=null?` <span class="chip ${cls(ratioCur-ratioSame)}" style="vertical-align:middle">同期 ${fmtRatio(ratioSame)}</span>`:''}</div></div>`;
+  return `<div class="cc-funnel">
+    ${node('报告数',Math.round(a.reportCount).toLocaleString('zh-CN'),y?numChip(a.reportCount,y.reportCount):'')}
+    ${arrow('报告→一面转化率',fmtPct(a.reportToInterview),y?a.reportToInterview-y.reportToInterview:null,'报告/一面比',fmtRatio(a.reportPerInterview),y?y.reportPerInterview:null,a.reportPerInterview)}
+    ${node('一面数',Math.round(a.interviewCount).toLocaleString('zh-CN'),y?numChip(a.interviewCount,y.interviewCount):'')}
+    ${arrow('一面→Offer转化率',fmtPct(a.interviewToOffer),y?a.interviewToOffer-y.interviewToOffer:null,'一面/Offer比',fmtRatio(a.interviewPerOffer),y?y.interviewPerOffer:null,a.interviewPerOffer)}
+    ${node('人均月均Offer数',Math.round(a.offerCount).toLocaleString('zh-CN'),y?numChip(a.offerCount,y.offerCount):'')}
+  </div>`;
+}
+function kpiClick(key){state.metric=key;document.getElementById('f-metric').value=key;renderTrend();}
+
+/* ================= 模块B 矩阵 ================= */
+function singleNode(id,i,mult){
+  const S = SERIES[id];
+  const rev=S.rev[i]*mult, hc=S.hc[i]*mult;
+  const offerAmt=rev*0.19, offerCount=Math.round(S.hc[i]*0.16)*mult;
+  const reportCount=Math.round(Math.round(S.hc[i]*0.16)*5.8)*mult, interviewCount=Math.round(Math.round(S.hc[i]*0.16)*2.4)*mult;
+  return {rev,budgetAmount:(S.cumBud[i]-(i?S.cumBud[i-1]:0))*mult,nfi:S.nfi[i]*mult,nfiRate:S.nfiRate[i],budgetPct:(S.cumBud[i]-(i?S.cumBud[i-1]:0))?S.rev[i]/(S.cumBud[i]-(i?S.cumBud[i-1]:0)):0,
+    npatPct:S.npatPct[i],npatPost:S.npatPost[i],hc,cph:S.cph[i],overdue:S.overdue[i]*mult,
+    offerAmt,offerCount,offerAvg:offerCount?offerAmt/offerCount:0,offerPerHC:hc?offerAmt/hc:0,
+    reportCount,interviewCount,reportToInterview:reportCount?interviewCount/reportCount:0,
+    interviewToOffer:interviewCount?offerCount/interviewCount:0,
+    reportPerInterview:interviewCount?reportCount/interviewCount:0,
+    interviewPerOffer:offerCount?interviewCount/offerCount:0,
+    fixedRev:rev*0.55,varRev:rev*0.45,monthlyOnsite:hc*0.32,
+    revY:(S.rev[i]/S.rev[i-12]-1),nfiY:(S.nfi[i]/S.nfi[i-12]-1),rateY:(S.nfiRate[i]-S.nfiRate[i-12]),
+    npatY:(S.npatPct[i]-S.npatPct[i-12]),hcY:(S.hc[i]/S.hc[i-12]-1),cphY:(S.cph[i]/S.cph[i-12]-1),odY:(S.overdue[i]/S.overdue[i-12]-1)};
+}
+function lightOf(budget,rateY){
+  if(budget>=1&&rateY>=0) return 'lg';
+  if(budget>=0.9&&rateY>=-0.02) return 'la';
+  return 'lr';
+}
+function budgetBar(p){
+  const w = Math.min(p*80,100); // 100% 进度对应 80% 条宽，留出超出空间
+  const c = p>=1?'g':(p>=0.9?'a':'r');
+  return `${fmtPct(p)}<span class="prog"><span class="prog-fill ${c}" style="width:${w.toFixed(1)}%"></span></span>`;
+}
+
+// 总计仅使用第一层数据，避免父子行重复累计。
+function totalRowStyle(row){return row.replace(/<tr[^>]*>/,'<tr class="summary-row">');}
+function sumMatrixNodes(nodes){
+  const sum=k=>nodes.reduce((v,n)=>v+(Number.isFinite(n[k])?n[k]:0),0);
+  const div=(a,b)=>b?a/b:0;
+  const weighted=(key,base)=>div(nodes.reduce((v,n)=>v+(n[key]||0)*(n[base]||0),0),sum(base));
+  const n={};
+  for(const key of ['rev','nfi','hc','overdue','overdueAmt','unbilled','offerAmt','offerCount','reportCount','interviewCount','fixedRev','varRev','monthlyOnsite','odHCPoint','odHC','netAdd','loss']) n[key]=sum(key);
+  n.nfiRate=div(n.nfi,n.rev);n.npatPct=weighted('npatPct','rev');n.npatPost=weighted('npatPost','rev');
+  n.budgetPct=div(n.rev,nodes.reduce((v,x)=>v+(x.budgetPct?x.rev/x.budgetPct:0),0));
+  n.cph=div(n.nfi,n.hc);n.lossRate=div(n.loss,n.nfi);
+  n.offerAvg=div(n.offerAmt,n.offerCount);n.offerPerHC=div(n.offerAmt,n.hc);
+  n.reportToInterview=div(n.interviewCount,n.reportCount);n.interviewToOffer=div(n.offerCount,n.interviewCount);
+  n.reportPerInterview=div(n.reportCount,n.interviewCount);n.interviewPerOffer=div(n.interviewCount,n.offerCount);
+  const previous=(key,ykey)=>nodes.reduce((v,x)=>v+(Number.isFinite(x[ykey])&&x[ykey]!==-1?x[key]/(1+x[ykey]):0),0);
+  for(const [key,ykey] of [['rev','revY'],['nfi','nfiY'],['hc','hcY'],['overdue','odY'],['odHCPoint','odHCPointY'],['odHC','odHCY'],['netAdd','netAddY'],['loss','lossY']]){
+    const prev=previous(key,ykey);n[ykey]=prev?n[key]/prev-1:0;
+  }
+  const prevRev=previous('rev','revY'),prevNfi=previous('nfi','nfiY'),prevHc=previous('hc','hcY');
+  n.rateY=n.nfiRate-div(prevNfi,prevRev);
+  n.npatY=n.npatPct-div(nodes.reduce((v,x)=>v+(x.npatPct-x.npatY)*(x.rev/(1+x.revY)),0),prevRev);
+  n.npatPostY=n.npatPost-div(nodes.reduce((v,x)=>v+(x.npatPost-(x.npatPostY??x.npatY))*(x.rev/(1+x.revY)),0),prevRev);
+  const prevCph=div(prevNfi,prevHc);n.cphY=prevCph?n.cph/prevCph-1:0;
+  n.lossRateY=n.lossRate-div(previous('loss','lossY'),prevNfi);
+  return n;
+}
+function customerTotalRow(list,allTotal,dimensions,contribution=false){
+  if(list.length<2)return '';
+  const nfi=list.reduce((v,c)=>v+c.nfi,0),prev=list.reduce((v,c)=>v+c.nfi/(1+c.yoy),0),diff=nfi-prev;
+  const share=(allTotal?nfi/allTotal*100:0).toFixed(1)+'%';
+  const labels='<td>总计</td>'+'<td>—</td>'.repeat(dimensions-1);
+  const cells=contribution?`<td>${share}</td><td class="${cls(diff)}">${(diff>=0?'+':'')+fmtMoney2(diff)} <span class="muted">${unitLabel()}</span></td>`
+    :`<td>${fmtMoney(nfi)} <span class="muted">${unitLabel()}</span></td><td>${prev?yoySpan(nfi/prev-1):'—'}</td><td>${share}</td>`;
+  return '<tr class="summary-row">'+labels+cells+'</tr>';
+}
+
+function matrixRow(name,node,indent,isBu,extraCls,onclick,toggleMark){
+  const isBuL = state.role==='BuLeader';
+  return `<tr class="${extraCls||''}" ${onclick?`onclick="${onclick}"`:''}>
+    <td style="padding-left:${10+indent*18}px">${toggleMark||''}${name}</td>
+    <td>${fmtMoney(node.rev)}${state.unit==='元'?'':' <span class="muted">'+unitLabel()+'</span>'}${yoyChip(node.revY)}</td>
+    <td>${fmtMoney(node.nfi)}${yoyChip(node.nfiY)}</td>
+    <td>${fmtPct(node.nfiRate)}${yoyChip(node.rateY,1)}</td>
+    <td>${budgetBar(node.budgetPct)}</td>
+    <td>${fmtPct(node.npatPct)}${yoyChip(node.npatY,1)}</td>
+    ${isBuL?`<td>${fmtPct(node.npatPost)}${yoyChip(node.npatPostY??node.npatY,1)}</td>`:''}
+    <td>${Math.round(node.hc).toLocaleString()}${yoyChip(node.hcY)}</td>
+    <td>${fmtMoney2(node.cph)}${yoyChip(node.cphY)}</td>
+    <td>${fmtMoney(node.overdue)}${yoyChip(node.odY)}</td>
+    <td><span class="light ${lightOf(node.budgetPct,node.rateY)}"></span></td>
+  </tr>`;
+}
+function renderMatrix(){
+  if(state.page==='cc'){renderCcMatrix();return;}
+  if(state.page==='rpo'){renderRpoMatrix();return;}
+  if(state.page==='stf'){renderStfMatrix();return;}
+  const i = curIdx(), isBuL = state.role==='BuLeader';
+  let html = `<thead><tr><th>组织（点击下钻）</th><th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th>${isBuL?'<th>NPAT% 二次亏损后</th>':''}<th>前台HC</th><th>人效</th><th>逾期&未开票</th><th>状态</th></tr></thead><tbody>`;
+  const roots=[];
+  for(const id of activeLines()){
+    const f = lineFactor(id), mult = f;
+    const node = nodeMetrics(id,i,mult);
+    roots.push(node);
+    const open = expanded.has('L:'+id);
+    html += matrixRow(LINE_CFG[id].name,node,0,isBuL,'row-expand',`toggleNode('L:${id}')`,open?'▾ ':'▸ ');
+    if(open){
+      const hier = scopedHierarchy(id);
+      if(ROLES[state.role].startLevel==='team'){
+        for(const b of hier.bus){
+          for(const t of b.teams){
+            const tid = 'T:'+id+'|'+b.name+'|'+t.name, topen = expanded.has(tid);
+            const tm = b.w*t.w;
+            html += matrixRow('├ '+b.name+' · '+t.name,nodeMetrics(id,i,tm),1,isBuL,'row-expand',`toggleNode('${tid.replace(/'/g,"\\'")}')`,topen?'▾ ':'▸ ');
+            if(topen){
+              for(const s of t.subs){
+                const sid = tid+'|'+s, sm = b.w*t.w/t.subs.length;
+                html += matrixRow('└ '+s,nodeMetrics(id,i,sm),2,isBuL,'');
+              }
+            }
+          }
+        }
+      } else {
+        for(const b of hier.bus){
+          for(const t of b.teams){
+            for(const s of t.subs){
+              const sid = 'S:'+id+'|'+b.name+'|'+t.name+'|'+s;
+              const sm = b.w*t.w/t.subs.length;
+              html += matrixRow(b.name+' · '+t.name+' · '+s,nodeMetrics(id,i,sm),1,isBuL,'');
+            }
+          }
+        }
+      }
+    }
+  }
+  if(roots.length>1) html+=totalRowStyle(matrixRow('总计',sumMatrixNodes(roots),0,isBuL,'summary-row'));
+  html += '</tbody>';
+  document.getElementById('matrix').innerHTML = html;
+}
+function toggleNode(id){
+  if(expanded.has(id)) expanded.delete(id); else expanded.add(id);
+  renderMatrix();
+}
+function renderCcOrder(){
+  const box=document.getElementById('cc-order-body'); if(!box)return;
+  const i=curIdx(), a=aggAt(i), dim=document.getElementById('cc-order-dim').value, metric=document.getElementById('cc-order-metric').value;
+  if(dim==='management'){document.getElementById('cc-order-metric').style.display='none';return renderCcOrderMgmt(a,metric);}
+  document.getElementById('cc-order-metric').style.display='';
+  const names=['张伟','李芳','王娜','赵敏','陈静','杨磊','黄军','周洋','刘勇','吴艳','徐杰','孙娟'];
+  const vals=names.map((n,k)=>({n,v:(metric==='revenue'?a.rev:a.offerAmt)*(0.05+((k*17)%9)/100),y:(k%4-1)*.06}));
+  const allocated=vals.reduce((v,x)=>v+x.v,0), expected=metric==='revenue'?a.rev:a.offerAmt;
+  for(const x of vals)x.v=allocated?x.v*expected/allocated:0;
+  const tab=state.ccOrderTab||'top', showAll=state.ccOrderShowAll||false;
+  const sorted=vals.slice().sort((x,y)=>tab==='top'?y.v-x.v:x.v-y.v);
+  const list=showAll?sorted:sorted.slice(0,10);
+  const allTotal=vals.reduce((s,x)=>s+x.v,0);
+  const totalV=vals.reduce((s,x)=>s+x.v,0), totalPrev=vals.reduce((s,x)=>s+x.v/(1+x.y),0), totalY=totalPrev?(totalV/totalPrev-1):0;
+  const rows=list.map(x=>{const prev=x.v/(1+x.y),diff=x.v-prev;return `<tr><td>${x.n}</td><td>${fmtMoney(x.v)}</td><td class="${cls(diff)}">${(diff>=0?'+':'')+fmtMoney2(diff)}</td><td>${yoyChip(x.y)}</td><td>${(x.v/allTotal*100).toFixed(1)}%</td></tr>`;}).join('');
+  const totalRow=`<tr style="font-weight:600;background:#f0f4f8"><td>合计</td><td>${fmtMoney(totalV)}</td><td class="${cls(totalV-totalPrev)}">${(totalV-totalPrev>=0?'+':'')+fmtMoney2(totalV-totalPrev)}</td><td>${yoyChip(totalY)}</td><td>${(totalV/allTotal*100).toFixed(1)}%</td></tr>`;
+  const moreBtn=showAll?'':`<span class="tab" onclick="state.ccOrderShowAll=true;renderCcOrder();" style="cursor:pointer">More · 全部顾问</span>`;
+  box.innerHTML=`<div class="tabs"><span class="tab ${tab==='top'?'on':''}" onclick="switchCcOrderTab('top')">TOP 10</span><span class="tab ${tab==='bottom'?'on':''}" onclick="switchCcOrderTab('bottom')">Bottom 10</span>${moreBtn}</div><table><thead><tr><th>顾问</th><th>${metric==='revenue'?'收入':'Offer金额（切分后）'}</th><th>同期差</th><th>同期比</th><th>占比</th></tr></thead><tbody>${rows}${totalRow}</tbody></table>`;
+}
+function switchCcOrderTab(t){state.ccOrderTab=t;state.ccOrderShowAll=false;renderCcOrder();}
+function toggleCcOrderDrill(id){const s=state.ccOrderExpanded;if(s.has(id))s.delete(id);else s.add(id);renderCcOrder();}
+function renderCcOrderMgmt(a,metric){
+  const box=document.getElementById('cc-order-body');
+  const leaves=orgLeaves('CC');
+  const ccHeads=HEADS.filter(h=>h.line==='CC'&&leaves.some(l=>l.bu===h.bu&&(!h.team||h.team===l.team)&&(!h.sub||h.sub===l.sub)));
+  const teamHeads=ccHeads.filter(h=>h.level==='Team_head');
+  const subHeads=ccHeads.filter(h=>h.level==='Subteam_Head');
+  const exp=state.ccOrderExpanded;
+  const advisors=['张伟','李芳','王娜','赵敏','陈静','杨磊'];
+  const month=selectedPeriods().length;
+  const previous=aggAt(curIdx()-12);
+  const mgmtRow=(label,leader,w,indent,id,openable)=>{
+    const hc=Math.round(a.hc*w), orderHc=Math.round(hc*0.6), orderHcPct=hc?(orderHc/hc*100):0;
+    const offerA=a.offerAmt*w, offerPct=a.offerAmt?(offerA/a.offerAmt*100):0;
+    const perMonthOffer=hc?(offerA/hc/month):0;
+    const rev=a.rev*w, revPct=a.rev?(rev/a.rev*100):0;
+    const eff=hc?(a.nfi*w)/hc:0;
+    const yoyHtml=(cur,key)=>{
+      const priorHc=Math.round(previous.hc*w);
+      const prev=key==='offer'?previous.offerAmt*w:key==='rev'?previous.rev*w:key==='perMonthOffer'?(priorHc?previous.offerAmt*w/priorHc/month:0):(priorHc?previous.nfi*w/priorHc:0),diff=cur-prev,rate=prev?((cur/prev-1>=0?'▲ ':'▼ ')+(Math.abs(cur/prev-1)*100).toFixed(1)+'%'):'—';
+      return `<div class="rpo-nfi-cmp ${cls(diff)}"><span title="同比比例" aria-label="同比比例 ${rate}">${rate}</span><span class="rpo-nfi-diff" title="同比差额（${unitLabel()}）" aria-label="同比差额 ${fmtMoney2(diff)} ${unitLabel()}">${(diff>=0?'+':'')+fmtMoney2(diff)}</span></div>`;
+    };
+    const mark=openable?(exp.has(id)?'▾ ':'▸ '):'';
+    return `<tr class="${openable?'row-expand':''}" ${openable?`onclick="toggleCcOrderDrill('${id}')"`:''} style="cursor:${openable?'pointer':'default'}">
+      <td style="padding-left:${10+indent*18}px">${mark}${label}</td>
+      <td>${leader}</td><td>${hc}</td><td>${orderHc}</td><td>${orderHcPct.toFixed(1)}%</td>
+      <td><div>${fmtMoney(offerA)}</div>${yoyHtml(offerA,'offer')}</td>
+      <td>${offerPct.toFixed(1)}%</td>
+      <td><div>${fmtMoney2(perMonthOffer)}</div>${yoyHtml(perMonthOffer,'perMonthOffer')}</td>
+      <td><div>${fmtMoney(rev)}</div>${yoyHtml(rev,'rev')}</td>
+      <td>${revPct.toFixed(1)}%</td>
+      <td><div>${fmtMoney2(eff)}</div>${yoyHtml(eff,'eff')}</td>
+      </tr>`;
+  };
+  let rows='';
+  const mgmtOpen=exp.has('MGMT');
+  const nmgmtOpen=exp.has('NMGMT');
+  rows+=mgmtRow('管理层','管理层汇总',.46,0,'MGMT',true);
+  rows+=mgmtRow('非管理层','非管理层汇总',.54,0,'NMGMT',true);
+  if(mgmtOpen){
+    let tw=.46/teamHeads.length;
+    for(const th of teamHeads){
+      const thOpen=exp.has(th.id);
+      rows+=mgmtRow(th.name,th.name,tw,1,th.id,true);
+      if(thOpen){
+        const subs=subHeads.filter(s=>s.team===th.team);
+        const sw=tw/Math.max(1,subs.length);
+        for(const sh of subs){
+          const shOpen=exp.has(sh.id);
+          rows+=mgmtRow(sh.name,sh.name,sw,2,sh.id,true);
+          if(shOpen){
+            const cIdx=parseInt(sh.id.replace(/[^0-9]/g,'').slice(-2)||'0',10);
+            for(let k=0;k<3;k++){
+              const cn=advisors[(cIdx+k)%advisors.length];
+              rows+=mgmtRow(cn,cn,sw*(0.28+k*0.18)/1.38,3,null,false);
+            }
+          }
+        }
+      }
+    }
+  }
+  if(nmgmtOpen){
+    const nw=.54/advisors.length;
+    for(const cn of advisors){rows+=mgmtRow(cn,cn,nw,1,null,false);}
+  }
+  rows+=totalRowStyle(mgmtRow('总计','—',1,0,null,false));
+  box.innerHTML='<div class="hint" style="margin-bottom:6px">点击管理层 / 非管理层 / Leader 行可逐层下钻</div><table class="cc-management-table"><thead><tr><th>管理层分类</th><th>Leader</th><th>前后台HC</th><th>成单HC</th><th>成单HC占比</th><th>Offer金额</th><th>Offer金额占比</th><th>人均月均Offer金额</th><th>收入金额</th><th>收入金额占比</th><th>综合人效</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function switchRpoMatrixTab(t){
+  state.rpoMatrixTab=t;
+  document.getElementById('rpo-tab-core').className='tab'+(t==='core'?' on':'');
+  document.getElementById('rpo-tab-biz').className='tab'+(t==='biz'?' on':'');
+  renderMatrix();
+}
+const rpoDExpanded=new Set();
+function toggleRpoKa(r){
+  const pos=state.rpoKa.indexOf(r);
+  if(pos<0) state.rpoKa.push(r); else state.rpoKa.splice(pos,1);
+  renderRpoKaChips(); renderRpoCustomers();
+}
+function renderRpoKaChips(){
+  for(const r of ['KA','Others']){
+    const el=document.getElementById('rpo-ka-'+r);
+    if(el) el.className='tab'+(state.rpoKa.includes(r)?' on':'');
+  }
+}
+function renderRpoMatrix(){
+  const i=curIdx(), view=state.rpoMatrixTab, core=view==='core';
+  const hier=scopedHierarchy('RPO'), isBu=state.role==='BuLeader';
+  let head='<th>组织（点击下钻）</th>';
+  if(core) head+='<th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th>'+ (isBu?'<th>NPAT% 二次亏损后</th>':'') +'<th>前后台HC</th><th>综合人效</th><th>逾期金额</th>';
+  else head+='<th>固定收费收入</th><th>变动收费收入</th><th>月均onsite</th>';
+  head+='<th>状态</th>';
+  const metricKeys=core
+    ? ['rev','nfi','nfiRate','budgetPct','npatPct',...(isBu?['npatPost']:[]),'hc','cph','overdue']
+    : RPO_METRICS;
+  const rpoCells=(n,weight,totalPrev)=>{
+    const prev=totalPrev||(i>=12?nodeMetrics('RPO',i-12,weight):null);
+    return metricKeys.map(key=>{
+      if(key==='budgetPct') return '<td>'+budgetBar(n[key])+'</td>';
+      const pct=['nfiRate','npatPct','npatPost'].includes(key);
+      const count=key==='hc'||key==='monthlyOnsite';
+      const val=pct?fmtPct(n[key]):count?Math.round(n[key]).toLocaleString('zh-CN')+' <span class="muted">人</span>':key==='cph'?fmtMoney2(n[key]):fmtMoney(n[key]);
+      const change=prev?(pct?n[key]-prev[key]:prev[key]?n[key]/prev[key]-1:null):null;
+      const cmp=change===null?'<span class="chip-row muted">同比 —</span>':yoyChip(change,pct);
+      return '<td>'+val+cmp+'</td>';
+    }).join('');
+  };
+  const row=(id,b,indent)=>{
+    const w=b.w, n=nodeMetrics(id,i,w), mark=expanded.has(id+'|'+b.name)?'▾ ':'▸ ';
+    let h='<tr class="row-expand" onclick="toggleNode(\''+id+'|'+b.name+'\')" style="cursor:pointer"><td style="padding-left:'+(10+indent*18)+'px">'+mark+b.name+'</td>';
+    h+=rpoCells(n,w);
+    return h+'<td><span class="light '+lightOf(n.budgetPct,n.rateY)+'"></span></td></tr>';
+  };
+  let body='';
+  for(const b of hier.bus){
+    body+=row('RPO',b,0);
+    if(expanded.has('RPO|'+b.name)){
+      for(const t of b.teams){
+        const tn=nodeMetrics('RPO',i,b.w*t.w);
+        body+='<tr class="row-expand" onclick="toggleNode(\'RPO|'+b.name+'|'+t.name+'\')" style="cursor:pointer"><td style="padding-left:28px">'+(expanded.has('RPO|'+b.name+'|'+t.name)?'▾ ':'▸ ')+t.name+'</td>';
+        body+=rpoCells(tn,b.w*t.w);
+        body+='<td><span class="light '+lightOf(tn.budgetPct,tn.rateY)+'"></span></td></tr>';
+        if(expanded.has('RPO|'+b.name+'|'+t.name)){
+          for(const s of t.subs){
+            const sn=nodeMetrics('RPO',i,b.w*t.w/t.subs.length);
+            body+='<tr><td style="padding-left:46px">'+s+'</td>';
+            body+=rpoCells(sn,b.w*t.w/t.subs.length);
+            body+='<td><span class="light '+lightOf(sn.budgetPct,sn.rateY)+'"></span></td></tr>';
+          }
+        }
+      }
+    }
+  }
+  if(hier.bus.length>1){
+    const n=sumMatrixNodes(hier.bus.map(b=>nodeMetrics('RPO',i,b.w)));
+    const prev=i>=12?sumMatrixNodes(hier.bus.map(b=>nodeMetrics('RPO',i-12,b.w))):null;
+    body+='<tr class="summary-row"><td>总计</td>'+rpoCells(n,1,prev)+'<td><span class="light '+lightOf(n.budgetPct,n.rateY)+'"></span></td></tr>';
+  }
+  document.getElementById('matrix').innerHTML='<thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody>';
+  renderRpoKaTable();
+}
+function rpoCustomerOrg(c){
+  const index=CUSTOMERS.filter(x=>x.line==='RPO').findIndex(x=>x.name===c.name);
+  const teams=HIER.RPO.bus.flatMap(b=>b.teams);
+  const team=teams[index%teams.length];
+  return {team,sub:team.subs[index%team.subs.length]};
+}
+function rpoCustFiltered(){
+  let cs=customerData().filter(c=>c.line==='RPO');
+  if(state.rpoKa.length) cs=cs.filter(c=>state.rpoKa.includes(c.ka));
+  if(state.rpoTeam!=='ALL') cs=cs.filter(c=>{const org=rpoCustomerOrg(c);return org.team.name===state.rpoTeam||org.sub===state.rpoTeam;});
+  cs=cs.filter(c=>selected('custGroup',c.name));
+  return cs;
+}
+function renderRpoCustomers(){
+  renderRpoKaChips(); renderRpoKaTable();
+  const cs=rpoCustFiltered();
+  const dim=(state.role==='BuLeader'||state.role==='TeamLeader')?'team':'sub';
+  const total=cs.reduce((s,c)=>s+c.nfi,0)||1;
+  const top10=cs.slice().sort((a,b)=>b.nfi-a.nfi).slice(0,10);
+  let h1='<thead><tr><th>客户集团</th><th>KA分类</th><th>业务线</th><th>NFI</th><th>同比</th><th>NFI占比</th></tr></thead><tbody>';
+  for(const c of top10){h1+='<tr><td>'+c.name+'</td><td>'+(c.ka||'—')+'</td><td>'+c.line+'</td><td>'+fmtMoney(c.nfi)+' <span class="muted">'+unitLabel()+'</span></td><td>'+yoySpan(c.yoy)+'</td><td>'+(c.nfi/total*100).toFixed(1)+'%</td></tr>';}
+  h1+=customerTotalRow(top10,total,3);
+  h1+='</tbody>';
+  document.getElementById('cust-share').innerHTML=h1;
+  const delta=c=>c.nfi-c.nfi/(1+c.yoy);
+  const grow=cs.filter(c=>c.yoy>0).sort((a,b)=>b.yoy-a.yoy).slice(0,10);
+  const decline=cs.filter(c=>c.yoy<0).sort((a,b)=>delta(a)-delta(b)).slice(0,10);
+  const list=state.custTab==='top'?grow:decline;
+  const tb=state.custTab==='top'?'NFI 同期增长':'NFI 同期下滑';
+  let h2='<thead><tr><th>客户集团</th><th>KA分类</th><th>业务线</th><th>NFI占比</th><th>'+tb+'</th></tr></thead><tbody>';
+  for(const c of list){const d=delta(c);h2+='<tr><td>'+c.name+'</td><td>'+(c.ka||'—')+'</td><td>'+c.line+'</td><td>'+(c.nfi/total*100).toFixed(1)+'%</td><td class="'+cls(d)+'">'+(d>=0?'+':'')+fmtMoney2(d)+' <span class="muted">'+unitLabel()+'</span></td></tr>';}
+  if(!list.length) h2+='<tr><td colspan="5" class="muted" style="text-align:center;padding:16px">当前范围内无'+(state.custTab==='top'?'增长':'下滑')+'客户</td></tr>';
+  h2+=customerTotalRow(list,total,3,true);
+  h2+='</tbody>';
+  document.getElementById('cust-tb').innerHTML=h2;
+  document.getElementById('tab-top').className='tab'+(state.custTab==='top'?' on':'');
+  document.getElementById('tab-bottom').className='tab'+(state.custTab==='bottom'?' on':'');
+}
+// Demo 分配：客户 NFI 按固定/变动 60%/40% 拆分，组织叶子各占 50%；各级汇总可勾稽。
+function rpoDRecords(){
+  return rpoCustFiltered().flatMap(c=>{
+    const {team,sub}=rpoCustomerOrg(c);
+    const leader=(level,org)=>{
+      const h=HEADS.find(h=>h.line==='RPO'&&h.level===level&&h.org===org);
+      const seed=hash('RPO'+level+org)>>>0;
+      const name=h&&!h.name.includes('undefined')?h.name:SUR[seed%16]+GIV[(seed>>>4)%16];
+      return name+' · '+org;
+    };
+    return [1,2].map(j=>({ka:c.ka,customer:c.name,
+      Team_head:leader('Team_head',team.name),
+      Subteam_Head:leader('Subteam_Head',sub),Squad_head:sub+' · 小组'+j+'负责人',
+      nfi:c.nfi/2,prev:c.nfi/(1+c.yoy)/2}));
+  });
+}
+function renderRpoKaTable(){
+  const box=document.getElementById('rpo-ka-table'); if(!box) return;
+  if(state.page!=='rpo'){box.style.display='none';return;}
+  box.style.display='block';
+  const org=state.role==='BuLeader'?['Team_head','Subteam_Head','Squad_head']:state.role==='TeamLeader'?['Subteam_Head','Squad_head']:['Squad_head'];
+  const levels=['ka','customer',...org], labels={ka:'KA分类',customer:'客户集团'};
+  const cell=(cur,prev)=>{
+    const diff=cur-prev, rate=prev?((cur/prev-1>=0?'▲ ':'▼ ')+(Math.abs(cur/prev-1)*100).toFixed(1)+'%'):'—';
+    return '<td><div>'+fmtMoney2(cur)+' <span class="muted">'+unitLabel()+'</span></div><div class="rpo-nfi-cmp '+cls(diff)+'"><span title="同比比例" aria-label="同比比例 '+rate+'">'+rate+'</span><span class="rpo-nfi-diff" title="同比差额（'+unitLabel()+'）" aria-label="同比差额 '+fmtMoney2(diff)+' '+unitLabel()+'">'+(diff>=0?'+':'')+fmtMoney2(diff)+'</span></div></td>';
+  };
+  const renderLevel=(records,depth,path)=>{
+    const groups=new Map();
+    for(const r of records){const key=r[levels[depth]];if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);}
+    let rows='';
+    for(const [name,rs] of groups){
+      const next=[...path,name], id=encodeURIComponent(JSON.stringify([state.role,...next])), open=rpoDExpanded.has(id), can=depth<levels.length-1;
+      const cur=rs.reduce((sum,r)=>sum+r.nfi,0), prev=rs.reduce((sum,r)=>sum+r.prev,0);
+      rows+='<tr'+(can?' class="row-expand" style="cursor:pointer" onclick="toggleRpoDNode(\''+id+'\')"':'')+'><td style="padding-left:'+(10+depth*18)+'px">'+(can?(open?'▾ ':'▸ '):'')+name+(depth>1?' <span class="muted">'+levels[depth]+'</span>':'')+'</td>'+cell(cur,prev)+cell(cur*.4,prev*.4)+cell(cur*.6,prev*.6)+'</tr>';
+      if(can&&open) rows+=renderLevel(rs,depth+1,next);
+    }
+    return rows;
+  };
+  const records=rpoDRecords();
+  let rows=renderLevel(records,0,[]);
+  if(new Set(records.map(r=>r.ka)).size>1){
+    const cur=records.reduce((v,r)=>v+r.nfi,0),prev=records.reduce((v,r)=>v+r.prev,0);
+    rows+='<tr class="summary-row"><td>总计</td>'+cell(cur,prev)+cell(cur*.4,prev*.4)+cell(cur*.6,prev*.6)+'</tr>';
+  }
+  box.innerHTML='<div class="sub muted" style="margin-bottom:6px;font-weight:600">内容1 · KA分类 NFI 分析</div><div class="hint" style="margin-bottom:6px">'+levels.map(k=>labels[k]||k).join(' → ')+'</div><div style="overflow-x:auto"><table><thead><tr><th>KA分类</th><th>NFI总计</th><th>NFI变动收费</th><th>NFI固定收费</th></tr></thead><tbody>'+ (rows||'<tr><td colspan="4" class="muted">当前筛选范围内无客户数据</td></tr>')+'</tbody></table></div>';
+}
+function toggleRpoDNode(id){
+  if(rpoDExpanded.has(id))rpoDExpanded.delete(id);else rpoDExpanded.add(id);
+  renderRpoKaTable();
+}
+
+function fmtRatio(v){return (v||0).toFixed(1)+' : 1';}
+function ccMatrixCell(n,key){
+  const map={offerAmt:fmtMoney(n.offerAmt),offerCount:Math.round(n.offerCount).toLocaleString('zh-CN'),offerAvg:fmtMoney2(n.offerAvg),offerPerHC:fmtMoney2(n.offerPerHC),reportCount:Math.round(n.reportCount).toLocaleString('zh-CN'),interviewCount:Math.round(n.interviewCount).toLocaleString('zh-CN'),reportToInterview:fmtPct(n.reportToInterview),interviewToOffer:fmtPct(n.interviewToOffer),reportPerInterview:fmtRatio(n.reportPerInterview),interviewPerOffer:fmtRatio(n.interviewPerOffer)};
+  const prev = n._previous?n._previous[key]:key==='offerAmt'?n.offerAmt*.92:key==='offerCount'?n.offerCount*.9:key==='offerAvg'?n.offerAvg*.92:key==='offerPerHC'?n.offerPerHC*.92:key==='reportCount'?n.reportCount*.94:key==='interviewCount'?n.interviewCount*.93:key==='reportToInterview'?n.reportToInterview-.02:key==='interviewToOffer'?n.interviewToOffer-.025:key==='reportPerInterview'?n.reportPerInterview-.4:n.interviewPerOffer-.5;
+  const delta = (n[key]-prev);
+  const isAbs = key==='reportToInterview'||key==='interviewToOffer'||key==='reportPerInterview'||key==='interviewPerOffer';
+  const isRatio = key==='reportPerInterview'||key==='interviewPerOffer';
+  if(isRatio) return `${map[key]}<div style="margin-top:1px"><span class="chip ${cls(n[key]-prev)}">同期 ${fmtRatio(prev)}</span></div>`;
+  return `${map[key]}${yoyChip(isAbs?delta:delta/(prev||1),isAbs)}`;
+}
+const CC_REGION_W={嵌入式:0.62,半导体:0.38};
+function renderCcMatrix(){
+  const i=curIdx(), future=+state.year>2026||(+state.year===2026&&+state.month>8), view=state.ccMatrixTab, regions=state.ccRegions||[];
+  if(future){document.getElementById('matrix').innerHTML='<tbody><tr><td class="muted" style="padding:20px">未来时间暂无 CC 实际经营数据</td></tr></tbody>';return;}
+  const n=nodeMetrics('CC',i,1), core=view==='core', biz=view==='biz', conv=view==='conv';
+  const hasReg = regions.length>0;
+  let head=(hasReg?'<th>重点区域</th>':'')+'<th>组织（点击下钻）</th>';
+  if(core) head+='<th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th><th>前后台HC</th><th>综合人效</th><th>逾期金额</th>';
+  if(biz) head+='<th>Offer金额</th><th>人均月均Offer数</th><th>Offer均价</th><th>人均Offer金额</th>';
+  if(conv) head+='<th>报告数</th><th>一面数</th><th>报告→一面</th><th>一面→Offer</th><th>报告/一面比</th><th>一面/Offer比</th>';
+  head+='<th>状态</th>';
+  const scaled=(src,m)=>Object.assign({},src,{_previous:nodeMetrics('CC',i-12,m),rev:src.rev*m,nfi:src.nfi*m,hc:src.hc*m,overdue:src.overdue*m,offerAmt:src.offerAmt*m,offerCount:src.offerCount*m,offerAvg:src.offerAvg,offerPerHC:src.offerPerHC,reportCount:src.reportCount*m,interviewCount:src.interviewCount*m});
+  const row=(name,area,mult,totalNode)=>{const nm=totalNode||scaled(n,mult);let h=`<tr>${hasReg?`<td>${area}</td>`:''}<td>${name}</td>`;
+    if(core) h+=`<td>${fmtMoney(nm.rev)}${yoyChip(n.revY)}</td><td>${fmtMoney(nm.nfi)}${yoyChip(n.nfiY)}</td><td>${fmtPct(n.nfiRate)}${yoyChip(n.rateY,1)}</td><td>${budgetBar(n.budgetPct)}</td><td>${fmtPct(n.npatPct)}${yoyChip(n.npatY,1)}</td><td>${Math.round(nm.hc)}${yoyChip(n.hcY)}</td><td>${fmtMoney2(nm.cph)}${yoyChip(n.cphY)}</td><td>${fmtMoney(nm.overdue)}${yoyChip(n.odY)}</td>`;
+    if(biz) for(const k of ['offerAmt','offerCount','offerAvg','offerPerHC']) h+=`<td>${ccMatrixCell(nm,k)}</td>`;
+    if(conv) for(const k of ['reportCount','interviewCount','reportToInterview','interviewToOffer','reportPerInterview','interviewPerOffer']) h+=`<td>${ccMatrixCell(nm,k)}</td>`;
+    return h+'<td><span class="light '+lightOf(n.budgetPct,n.rateY)+'"></span></td></tr>';};
+  let body;
+  if(hasReg){
+    body=regions.map(r=>scopedHierarchy('CC').bus.map(b=>row(b.name,r,b.w*(CC_REGION_W[r]||0.5))).join('')).join('');
+  } else {
+    body=scopedHierarchy('CC').bus.map(b=>row(b.name,'',b.w)).join('');
+  }
+  if((hasReg?regions.length:scopedHierarchy('CC').bus.length)>1){
+    const weights=hasReg?regions.flatMap(r=>scopedHierarchy('CC').bus.map(b=>b.w*(CC_REGION_W[r]||0.5))):scopedHierarchy('CC').bus.map(b=>b.w);
+    const total=sumMatrixNodes(weights.map(w=>scaled(n,w)));
+    total._previous=sumMatrixNodes(weights.map(w=>nodeMetrics('CC',i-12,w)));
+    body+=totalRowStyle(row(hasReg?'—':'总计',hasReg?'总计':'',1,total));
+  }
+  document.getElementById('matrix').innerHTML=`<thead><tr>${head}</tr></thead><tbody>${body}</tbody>`;
+}
+
+/* ---- 模块B · STF 版本（STF 业务线含 STF-OD，无业务线维度，增加业务线指标） ---- */
+function singleStfNode(lineId,i,mult){
+  const S = SERIES[lineId];
+  const n = singleNode(lineId,i,mult);
+  const lr = 0.028+0.004*Math.sin(i*0.7);
+  const lrPrev = i>=12 ? 0.028+0.004*Math.sin((i-12)*0.7) : lr;
+  n.odHCPoint = n.hc*0.82*(1+0.015*Math.sin(i*1.7+0.5));
+  n.odHCPointY = n.hcY;
+  n.odHC = n.hc*0.82;
+  n.odHCY = n.hcY;
+  n.netAdd = (S.hc[i]-S.hc[i-12])*mult*0.82;
+  const prevNetAdd = i>=24 ? (S.hc[i-12]-S.hc[i-24])*mult*0.82 : 0;
+  n.netAddY = prevNetAdd ? (n.netAdd/prevNetAdd-1) : 0;
+  n.loss = n.nfi*lr;
+  const prevLoss = S.nfi[i-12]*mult*lrPrev;
+  n.lossY = prevLoss ? (n.loss/prevLoss-1) : 0;
+  n.lossRate = lr;
+  n.lossRateY = lr-lrPrev;
+  n.overdueAmt = n.overdue*0.6; n.unbilled = n.overdue*0.4;
+  return n;
+}
+function stfMatrixRow(name,node,indent,onclick,mark){
+  const isBuL = state.role==='BuLeader';
+  const view = state.stfMatrixTab;
+  const core = view==='core', biz = view==='biz';
+  return `<tr class="${onclick?'row-expand':''}" ${onclick?`onclick="${onclick}"`:''}>
+    <td style="padding-left:${10+indent*18}px">${mark||''}${name}</td>
+    ${core?`<td>${fmtMoney(node.rev)}${state.unit==='元'?'':' <span class="muted">'+unitLabel()+'</span>'}${yoyChip(node.revY)}</td>`:''}
+    ${core?`<td>${fmtMoney(node.nfi)}${yoyChip(node.nfiY)}</td>`:''}
+    ${core?`<td>${fmtPct(node.nfiRate)}${yoyChip(node.rateY,1)}</td>`:''}
+    ${core?`<td>${budgetBar(node.budgetPct)}</td>`:''}
+    ${core?`<td>${fmtPct(node.npatPct)}${yoyChip(node.npatY,1)}</td>`:''}
+    ${(isBuL&&core)?`<td>${fmtPct(node.npatPost)}${yoyChip(node.npatPostY??node.npatY,1)}</td>`:''}
+    ${core?`<td>${Math.round(node.hc).toLocaleString()}${yoyChip(node.hcY)}</td>`:''}
+    ${core?`<td>${fmtMoney2(node.cph)}${yoyChip(node.cphY)}</td>`:''}
+    ${core?`<td>${fmtMoney(node.overdueAmt)}${yoyChip(node.odY)}</td>`:''}
+    ${core?`<td>${fmtMoney(node.unbilled)}${yoyChip(node.odY)}</td>`:''}
+    ${biz?`<td>${Math.round(node.odHCPoint).toLocaleString()}${yoyChip(node.odHCPointY)}</td>`:''}
+    ${biz?`<td>${Math.round(node.odHC).toLocaleString()}${yoyChip(node.odHCY)}</td>`:''}
+    ${biz?`<td>${(node.netAdd>=0?'+':'')+Math.round(node.netAdd).toLocaleString()}${yoyChip(node.netAddY)}</td>`:''}
+    ${biz?`<td>${fmtMoney2(node.loss)}${yoyChip(node.lossY)}</td>`:''}
+    ${biz?`<td>${fmtPct(node.lossRate)}${yoyChip(node.lossRateY,1)}</td>`:''}
+    <td><span class="light ${lightOf(node.budgetPct,node.rateY)}"></span></td>
+  </tr>`;
+}
+function renderStfMatrix(){
+  const i=curIdx(), isBuL=state.role==='BuLeader';
+  const view = state.stfMatrixTab;
+  let heads = '<th>组织（点击下钻）</th>';
+  if(view==='core'){
+    heads += '<th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th>';
+    if(isBuL) heads += '<th>NPAT% 二次亏损后</th>';
+    heads += '<th>前台HC</th><th>人效</th><th>逾期金额</th><th>未开票金额</th>';
+  } else {
+    heads += '<th>外包时点在职</th><th>外包日均在职</th><th>外包净增</th><th>总损耗</th><th>总损耗NFI占比</th>';
+  }
+  heads += '<th>状态</th>';
+  let html = `<thead><tr>${heads}</tr></thead><tbody>`;
+  const roots=[];
+  for(const id of pageLines()){
+    for(const b of scopedHierarchy(id).bus){
+      const bid = 'B:'+id+'|'+b.name, open = expanded.has(bid);
+      const mult = b.w;
+      roots.push(stfNodeMetrics(id,i,mult));
+      html += stfMatrixRow((id==='STFOD'?b.name+'（OD）':b.name),stfNodeMetrics(id,i,mult),0,`toggleNode('${bid}')`,open?'▾ ':'▸ ');
+      if(open){
+        if(ROLES[state.role].startLevel==='team'){
+          for(const t of b.teams){
+            const tid = bid+'|'+t.name, topen = expanded.has(tid);
+            const tm = mult*t.w;
+            html += stfMatrixRow('├ '+t.name,stfNodeMetrics(id,i,tm),1,`toggleNode('${tid}')`,topen?'▾ ':'▸ ');
+            if(topen){
+              for(const s of t.subs){
+                const sid = tid+'|'+s, sm = mult*t.w/t.subs.length;
+                html += stfMatrixRow('└ '+s,stfNodeMetrics(id,i,sm),2);
+              }
+            }
+          }
+        } else {
+          for(const t of b.teams){
+            for(const s of t.subs){
+              const sid = bid+'|'+t.name+'|'+s, sm = mult*t.w/t.subs.length;
+              html += stfMatrixRow(t.name+' · '+s,stfNodeMetrics(id,i,sm),1);
+            }
+          }
+        }
+      }
+    }
+  }
+  if(roots.length>1) html+=totalRowStyle(stfMatrixRow('总计',sumMatrixNodes(roots),0));
+  html += '</tbody>';
+  document.getElementById('matrix').innerHTML = html;
+}
+
+/* ================= 模块C 趋势（内置 SVG，无外部依赖） ================= */
+function metricFmt(M){
+  if(M.pct) return v=>(v*100).toFixed(1)+'%';
+  if(M.num) return v=>Math.round(v).toLocaleString('zh-CN');
+  return v=>fmtMoney2(v);
+}
+function renderTrend(){
+  const sel = document.getElementById('f-metric');
+  const keys = pageMetricKeys();
+  if(!keys.includes(state.metric)) state.metric = 'rev';
+  sel.innerHTML = '';
+  for(const k of keys){const o=document.createElement('option');o.value=k;o.textContent=METRICS[k].label;sel.appendChild(o);}
+  sel.value = state.metric;
+  const yr = +state.year, start = idxOf(Math.min(...multiState.year.map(Number))-1,1), end = curIdx();
+  const monthly = [];
+  for(let i=start;i<=end;i++){
+    monthly.push({yy:2024+Math.floor(i/12), mm:i%12+1, a:monthAggAt(i)});
+  }
+  const labels = [], data = [], yearOf = [];
+  if(state.trendDim==='quarter'){
+    const qmap = new Map();
+    for(const m of monthly){
+      const q=Math.ceil(m.mm/3),key=m.yy+'-'+q;
+      if(!qmap.has(key))qmap.set(key,{yy:m.yy,q,rows:[]});
+      qmap.get(key).rows.push(m.a);
+    }
+    for(const o of qmap.values()){
+      const vals=combinePeriods(o.rows);
+      labels.push((o.yy%100)+'Q'+o.q);yearOf.push(o.yy);data.push(vals[state.metric]);
+    }
+  } else {
+    for(const m of monthly){
+      labels.push((m.yy%100)+'-'+String(m.mm).padStart(2,'0'));
+      yearOf.push(m.yy);
+      data.push(m.a[state.metric]);
+    }
+  }
+  const M = METRICS[state.metric], fm = metricFmt(M);
+  const el = document.getElementById('trend-chart');
+  const W=900,H=400,padL=70,padR=14,padT=14,padB=36;
+  const n = data.length;
+  let lo = Math.min(...data), hi = Math.max(...data);
+  if(M.pct){const mid=(lo+hi)/2;lo=mid-(mid-lo||0.005)*1.25;hi=mid+(hi-mid||0.005)*1.25;}
+  else {lo=Math.min(0,lo);hi=hi*1.08||1;}
+  const X=i=>padL+(W-padL-padR)*(n>1?i/(n-1):0.5);
+  const Y=v=>padT+(H-padT-padB)*(1-(v-lo)/((hi-lo)||1));
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:100%" role="img"><title>${M.label} 趋势</title>`;
+  for(let g=0;g<=4;g++){
+    const gy=padT+(H-padT-padB)*g/4, gv=hi-(hi-lo)*g/4;
+    s+=`<line x1="${padL}" y1="${gy}" x2="${W-padR}" y2="${gy}" stroke="#e4e9f0" stroke-width="1"/>`;
+    s+=`<text x="${padL-6}" y="${gy}" text-anchor="end" dominant-baseline="central" font-size="11" fill="#7a8699">${fm(gv)}</text>`;
+  }
+  // 年份分隔线与年份标注
+  let runStart = 0;
+  for(let i=1;i<=n;i++){
+    if(i===n||yearOf[i]!==yearOf[i-1]){
+      if(i<n){
+        const xs=(X(i-1)+X(i))/2;
+        s+=`<line x1="${xs}" y1="${padT}" x2="${xs}" y2="${H-padB}" stroke="#b9c6d6" stroke-width="1" stroke-dasharray="4 3"/>`;
+      }
+      const cx=(X(runStart)+X(i-1))/2;
+      s+=`<text x="${cx}" y="${padT+10}" text-anchor="middle" font-size="12" font-weight="500" fill="#54657a">${yearOf[runStart]} 年</text>`;
+      runStart=i;
+    }
+  }
+  const pts = data.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1));
+  const area='M'+X(0).toFixed(1)+','+(H-padB)+' L'+pts.join(' L')+' L'+X(n-1).toFixed(1)+','+(H-padB)+' Z';
+  s+=`<path d="${area}" fill="rgba(24,95,165,.08)"/>`;
+  s+=`<path d="M${pts.join(' L')}" fill="none" stroke="#185fa5" stroke-width="2" stroke-linejoin="round"/>`;
+  labels.forEach((lb,i)=>{
+    if(n>13&&i%2===1) return;
+    s+=`<text x="${X(i)}" y="${H-12}" text-anchor="middle" font-size="10" fill="#7a8699">${lb}</text>`;
+  });
+  data.forEach((v,i)=>{
+    s+=`<circle cx="${X(i)}" cy="${Y(v)}" r="3.5" fill="#185fa5"><title>${labels[i]}  ${M.label}：${fm(v)}${M.money?' '+unitLabel():''}</title></circle>`;
+  });
+  s+=`<text x="${padL}" y="${padT-2}" font-size="11" fill="#54657a">${M.label}（${state.page==='stf'?'STF 业务线 · ':state.page==='cc'?'CC 业务线 · ':''}${Math.min(...multiState.year.map(Number))-1}—${yr} 年 · ${state.trendDim==='quarter'?'季度':'月度'} · 截止 ${state.month} 月）</text>`;
+  s+='</svg>';
+  el.innerHTML = s;
+}
+
+/* ================= 模块D 客户 ================= */
+function custFiltered(){
+  let cs = customerData().slice();
+  if(state.custLine!=='ALL') cs = cs.filter(c=>c.line===state.custLine);
+  cs=cs.filter(c=>selected('custGroup',c.name));
+  return cs;
+}
+function renderCustomers(){
+  document.getElementById('cust-share-title').textContent=(state.page==='rpo'?'内容2':'内容1')+' · 客户 NFI 占比（TOP10）';
+  document.getElementById('cust-contrib-title').textContent=(state.page==='rpo'?'内容3':'内容2')+' · 客户贡献';
+  if(state.page==='stf'){renderStfCustomers();return;}
+  if(state.page==='cc'){renderCcCustomers();return;}
+  if(state.page==='rpo'){renderRpoCustomers();return;}
+  const cs = custFiltered();
+  const total = cs.reduce((s,c)=>s+c.nfi,0);
+  const top10 = cs.slice().sort((a,b)=>b.nfi-a.nfi).slice(0,10);
+  let h1 = '<thead><tr><th>客户集团</th><th>业务线</th><th>NFI</th><th>同比</th><th>NFI占比</th></tr></thead><tbody>';
+  for(const c of top10){
+    h1 += `<tr><td>${c.name}</td><td>${c.line==='OS'?'Oversea':c.line}</td><td>${fmtMoney(c.nfi)} <span class="muted">${unitLabel()}</span></td><td>${yoySpan(c.yoy)}</td><td>${(c.nfi/total*100).toFixed(1)}%</td></tr>`;
+  }
+  h1+=customerTotalRow(top10,total,2);
+  h1+='</tbody>';
+  document.getElementById('cust-share').innerHTML = h1;
+
+  const delta = c=>c.nfi - c.nfi/(1+c.yoy);
+  const growList = cs.filter(c=>c.yoy>0).sort((a,b)=>b.yoy-a.yoy).slice(0,10);
+  const declineList = cs.filter(c=>c.yoy<0).sort((a,b)=>delta(a)-delta(b)).slice(0,10);
+  const list = state.custTab==='top'?growList:declineList;
+  const tb = state.custTab==='top'?'NFI 同期增长':'NFI 同期下滑';
+  let h2 = `<thead><tr><th>客户集团</th><th>业务线</th><th>NFI占比</th><th>${tb}</th></tr></thead><tbody>`;
+  for(const c of list){
+    const d = delta(c);
+    h2 += `<tr><td>${c.name}</td><td>${c.line==='OS'?'Oversea':c.line}</td><td>${(c.nfi/total*100).toFixed(1)}%</td><td class="${cls(d)}">${(d>=0?'+':'')+fmtMoney2(d)} <span class="muted">${unitLabel()}</span></td></tr>`;
+  }
+  if(!list.length) h2 += `<tr><td colspan="4" class="muted" style="text-align:center;padding:16px">当前范围内无${state.custTab==='top'?'增长':'下滑'}客户</td></tr>`;
+  h2+=customerTotalRow(list,total,2,true);
+  h2+='</tbody>';
+  document.getElementById('cust-tb').innerHTML = h2;
+  document.getElementById('tab-top').className = 'tab'+(state.custTab==='top'?' on':'');
+  document.getElementById('tab-bottom').className = 'tab'+(state.custTab==='bottom'?' on':'');
+}
+function switchCustTab(t){state.custTab=t;renderCustomers();}
+
+/* ---- 模块D · STF 版本（所属团队列 + 团队维度筛选器） ---- */
+function stfCustFiltered(){
+  let cs = customerData().filter(c=>c.line==='STF');
+  if(state.stfTeam!=='ALL') cs = cs.filter(c=>c.team===state.stfTeam||c.sub===state.stfTeam);
+  cs=cs.filter(c=>selected('custGroup',c.name));
+  return cs;
+}
+function renderStfCustomers(){
+  const cs = stfCustFiltered();
+  const dim = (state.role==='BuLeader'||state.role==='TeamLeader')?'team':'sub';
+  const total = cs.reduce((s,c)=>s+c.nfi,0)||1;
+  const top10 = cs.slice().sort((a,b)=>b.nfi-a.nfi).slice(0,10);
+  let h1 = `<thead><tr><th>客户集团</th><th>所属团队（${dim==='team'?'Team 维度':'Subteam 维度'}）</th><th>NFI</th><th>同比</th><th>NFI占比</th></tr></thead><tbody>`;
+  for(const c of top10){
+    h1 += `<tr><td>${c.name}</td><td>${c[dim]}</td><td>${fmtMoney(c.nfi)} <span class="muted">${unitLabel()}</span></td><td>${yoySpan(c.yoy)}</td><td>${(c.nfi/total*100).toFixed(1)}%</td></tr>`;
+  }
+  h1+=customerTotalRow(top10,total,2);
+  h1+='</tbody>';
+  document.getElementById('cust-share').innerHTML = h1;
+
+  const delta = c=>c.nfi - c.nfi/(1+c.yoy);
+  const grow = cs.filter(c=>c.yoy>0).sort((a,b)=>b.yoy-a.yoy).slice(0,10);
+  const decline = cs.filter(c=>c.yoy<0).sort((a,b)=>delta(a)-delta(b)).slice(0,10);
+  const list = state.custTab==='top'?grow:decline;
+  const tb = state.custTab==='top'?'NFI 同期增长':'NFI 同期下滑';
+  let h2 = `<thead><tr><th>客户集团</th><th>所属团队</th><th>NFI占比</th><th>${tb}</th></tr></thead><tbody>`;
+  for(const c of list){
+    const d = delta(c);
+    h2 += `<tr><td>${c.name}</td><td>${c[dim]}</td><td>${(c.nfi/total*100).toFixed(1)}%</td><td class="${cls(d)}">${(d>=0?'+':'')+fmtMoney2(d)} <span class="muted">${unitLabel()}</span></td></tr>`;
+  }
+  if(!list.length) h2 += `<tr><td colspan="4" class="muted" style="text-align:center;padding:16px">当前范围内无${state.custTab==='top'?'增长':'下滑'}客户</td></tr>`;
+  h2+=customerTotalRow(list,total,2,true);
+  h2+='</tbody>';
+  document.getElementById('cust-tb').innerHTML = h2;
+  document.getElementById('tab-top').className = 'tab'+(state.custTab==='top'?' on':'');
+  document.getElementById('tab-bottom').className = 'tab'+(state.custTab==='bottom'?' on':'');
+}
+
+/* ---- 模块D · CC 版本（所属团队列 + 团队维度筛选器，本页即 CC 业务线，无业务线列） ---- */
+function ccCustFiltered(){
+  let cs = customerData().filter(c=>c.line==='CC');
+  if(state.ccTeam!=='ALL') cs = cs.filter(c=>c.team===state.ccTeam||c.sub===state.ccTeam);
+  cs=cs.filter(c=>selected('custGroup',c.name));
+  return cs;
+}
+function renderCcCustomers(){
+  const cs = ccCustFiltered();
+  const dim = (state.role==='BuLeader'||state.role==='TeamLeader')?'team':'sub';
+  const total = cs.reduce((s,c)=>s+c.nfi,0)||1;
+  const top10 = cs.slice().sort((a,b)=>b.nfi-a.nfi).slice(0,10);
+  let h1 = `<thead><tr><th>客户集团</th><th>所属团队（${dim==='team'?'Team 维度':'Subteam 维度'}）</th><th>NFI</th><th>同比</th><th>NFI占比</th></tr></thead><tbody>`;
+  for(const c of top10){
+    h1 += `<tr><td>${c.name}</td><td>${c[dim]}</td><td>${fmtMoney(c.nfi)} <span class="muted">${unitLabel()}</span></td><td>${yoySpan(c.yoy)}</td><td>${(c.nfi/total*100).toFixed(1)}%</td></tr>`;
+  }
+  h1+=customerTotalRow(top10,total,2);
+  h1+='</tbody>';
+  document.getElementById('cust-share').innerHTML = h1;
+
+  const delta = c=>c.nfi - c.nfi/(1+c.yoy);
+  const grow = cs.filter(c=>c.yoy>0).sort((a,b)=>b.yoy-a.yoy).slice(0,10);
+  const decline = cs.filter(c=>c.yoy<0).sort((a,b)=>delta(a)-delta(b)).slice(0,10);
+  const list = state.custTab==='top'?grow:decline;
+  const tb = state.custTab==='top'?'NFI 同期增长':'NFI 同期下滑';
+  let h2 = `<thead><tr><th>客户集团</th><th>所属团队</th><th>NFI占比</th><th>${tb}</th></tr></thead><tbody>`;
+  for(const c of list){
+    const d = delta(c);
+    h2 += `<tr><td>${c.name}</td><td>${c[dim]}</td><td>${(c.nfi/total*100).toFixed(1)}%</td><td class="${cls(d)}">${(d>=0?'+':'')+fmtMoney2(d)} <span class="muted">${unitLabel()}</span></td></tr>`;
+  }
+  if(!list.length) h2 += `<tr><td colspan="4" class="muted" style="text-align:center;padding:16px">当前范围内无${state.custTab==='top'?'增长':'下滑'}客户</td></tr>`;
+  h2+=customerTotalRow(list,total,2,true);
+  h2+='</tbody>';
+  document.getElementById('cust-tb').innerHTML = h2;
+  document.getElementById('tab-top').className = 'tab'+(state.custTab==='top'?' on':'');
+  document.getElementById('tab-bottom').className = 'tab'+(state.custTab==='bottom'?' on':'');
+}
+
+/* ================= 模块E 利润桥（横向条形列表） ================= */
+function renderBridge(){
+  const {a} = getAgg();
+  const nfi=a.nfi, gp=a.gp, npat=a.npat;
+  // NFI → GP 扣减
+  const gap1 = nfi-gp;
+  const csc = gap1*0.58;           // CSC后台业绩切分
+  const ic  = gap1-csc;            // 内部成本（残差，确保勾稽）
+  // GP → NPAT 扣减
+  const gap2 = gp-npat;
+  const vat = gap2*0.07;           // 增值税附加金额
+  const cs  = gap2*0.28;           // 客服成本
+  const rl  = gap2*0.40;           // 运营成本-人工
+  const ga  = gap2*0.12;           // 集团分摊
+  const oe  = gap2-vat-cs-rl-ga;   // 其他经营费用（汇总）（残差）
+  // 运行余额（每个步骤之后的累计），顺序与开发文档 5.5.1 一致
+  const steps = [
+    {l:'NFI',               kind:'total', v:nfi,  run:nfi},
+    {l:'CSC后台业绩切分',     kind:'cost',  v:csc,  run:nfi-csc},
+    {l:'内部成本',           kind:'cost',  v:ic,   run:nfi-csc-ic},
+    {l:'GP',                kind:'total', v:gp,   run:gp},
+    {l:'增值税附加金额',       kind:'cost',  v:vat,  run:gp-vat},
+    {l:'客服成本',           kind:'cost',  v:cs,   run:gp-vat-cs},
+    {l:'运营成本-人工',       kind:'cost',  v:rl,   run:gp-vat-cs-rl},
+    {l:'集团分摊',           kind:'cost',  v:ga,   run:gp-vat-cs-rl-ga},
+    {l:'其他经营费用（汇总）', kind:'cost',  v:oe,   run:gp-vat-cs-rl-ga-oe},
+    {l:'NPAT',              kind:'total', v:npat, run:npat}
+  ];
+  const hi = nfi||1; // 比例尺基准 = NFI（瀑布起点，不再展示 Rev）
+  const rows = steps.map(s=>{
+    const wPct = Math.max(0, s.v)/hi*100;
+    const leftPct = s.kind==='total' ? 0 : s.run/hi*100;
+    const valTxt = s.kind==='total' ? fmtMoney2(s.v) : '-'+fmtMoney2(s.v);
+    const valCls = s.kind==='cost' ? 'down' : '';
+    return `<div class="bridge-row">
+      <div class="b-label">${s.l}</div>
+      <div class="b-track"><div class="b-bar ${s.kind==='total'?'b-total':'b-cost'}" style="left:${leftPct.toFixed(2)}%;width:${wPct.toFixed(2)}%"></div></div>
+      <div class="b-val ${valCls}">${valTxt}<span class="muted"> ${unitLabel()}</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('bridge-chart').innerHTML = `<div class="bridge">${rows}</div>`;
+}
+
+/* ================= 模块F 风险 ================= */
+function renderRisks(){
+  return;
+  const i = curIdx();
+  const risks = [];
+  for(const id of pageLines()){
+    const S = SERIES[id];
+    const nfiY = S.nfi[i]/S.nfi[i-12]-1, rateY = S.nfiRate[i]-S.nfiRate[i-12];
+    const npatY = S.npatPct[i]-S.npatPct[i-12], odM = S.overdue[i]/S.overdue[i-1]-1, bud = S.budgetPct[i];
+    if(nfiY<0) risks.push({sev:Math.abs(nfiY)>0.08?'r':'y',obj:LINE_CFG[id].name,title:'NFI 下滑',
+      cond:'NFI 同比 '+fmtYoY(nfiY),imp:'当月 NFI 同比减少 '+fmtMoney2(Math.abs(S.nfi[i]-S.nfi[i-12]))+' '+unitLabel(),
+      act:'建议：排查重点客户流失与交付产能，关注模块D 客户明细中同期下滑客户。'});
+    if(rateY<-0.01) risks.push({sev:rateY<-0.02?'r':'y',obj:LINE_CFG[id].name,title:'NFI% 下滑',
+      cond:'NFI% 同比 '+fmtPp(rateY),imp:'利润率恶化，NFI% 为 '+fmtPct(S.nfiRate[i]),
+      act:'建议：复核定价与折扣政策，关注成本结构变化（见模块E 利润桥）。'});
+    if(npatY<0) risks.push({sev:npatY<-0.02?'r':'y',obj:LINE_CFG[id].name,title:'NPAT% 下滑',
+      cond:'NPAT% 同比 '+fmtPp(npatY),imp:'净利率 '+fmtPct(S.npatPct[i])+'，同比恶化',
+      act:'建议：核对运营成本与集团分摊异常项，必要时启动专项成本复盘。'});
+    if(odM>0.1) risks.push({sev:odM>0.2?'r':'y',obj:LINE_CFG[id].name,title:'逾期风险激增',
+      cond:'逾期&未开票金额环比 +'+(odM*100).toFixed(1)+'%',imp:'当前余额 '+fmtMoney2(S.overdue[i])+' '+unitLabel(),
+      act:'建议：拉取逾期&未开票明细（模块A More），对高风险客户启动催收与信用管控。'});
+    if(bud<0.9) risks.push({sev:'r',obj:LINE_CFG[id].name,title:'预算进度不理想',
+      cond:'YTD 预算进度 '+fmtPct(bud),imp:'落后预算 '+(100-bud*100).toFixed(1)+' 个百分点',
+      act:'建议：将预算缺口分解到团队与客户（模块B 下钻），制定追赶计划并按月跟踪。'});
+  }
+  risks.sort((a,b)=>(a.sev==='r'?0:1)-(b.sev==='r'?0:1));
+  const box = document.getElementById('risks');
+  box.innerHTML = risks.length?risks.map(r=>`
+    <div class="risk-card ${r.sev==='r'?'':'warn'}">
+      <h4>${r.sev==='r'?'🔴':'🟡'} ${r.title} · ${r.obj}</h4>
+      <div class="r-line">触发条件：${r.cond}</div>
+      <div class="r-line">影响量化：${r.imp}</div>
+      <div class="r-act">${r.act}</div>
+    </div>`).join(''):'<div class="muted">当前筛选范围内未触发风险提示。</div>';
+}
+
+/* ================= 角色横幅 ================= */
+function renderRoleBanner(){
+  const r = ROLES[state.role];
+  const startName = r.startLevel==='team'?'Team（Bu Leader 从 Team Leader 层开始下钻）':'Subteam（直接从 Subteam 层开始）';
+  document.getElementById('role-banner').innerHTML =
+    `<span><b>当前角色：${multiState.role.map(k=>ROLES[k].label).join('、')}</b> · 已选期间：${periodCaption()}</span>
+     <span>当前页面：<b>${state.page==='stf'?'STF看板（STF 业务线）':state.page==='cc'?'CC看板（CC 业务线）':state.page==='rpo'?'RPO看板（RPO 业务线）':'总看板'}</b></span>
+     <span>KPI 卡片：<b>${r.kpi} 个</b>${r.kpi===9?'（含 NPAT% 二次亏损后）':''}</span>
+     <span>模块B 下钻起点：<b>${startName}</b></span>`;
+}
+
+/* ================= More 弹窗 ================= */
+function openModal(title,body,foot){
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-foot').innerHTML = foot||'';
+  document.getElementById('overlay').classList.add('show');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('show');}
+
+const ESUR = ['Zhang','Wang','Li','Zhao','Liu','Chen','Yang','Huang','Zhou','Wu','Xu','Sun','Ma','Zhu','Hu','Guo'];
+const EGIV = ['Alex','Bella','Chris','Diana','Eric','Fiona','Gary','Helen','Ivan','Julia','Kevin','Luna','Mason','Nina','Oscar','Ruby'];
+let empSeq = 1000;
+function openHcDetail(){
+  const lines = pageLines();
+  let html = '<div class="newtab-note">演示：新标签页打开 · 钻取页（Drill-through）· 携带当前筛选上下文 · 受 RLS 权限控制</div>';
+  html += `<div class="muted" style="margin-bottom:8px">聚合维度：月份 / Bu / Team / Subteam / 雇佣类型（分组展示），明细行：员工编号 / 中文姓名 / 英文姓名 / HC</div>`;
+  html += '<table><thead><tr><th>员工编号</th><th>中文姓名</th><th>英文姓名</th><th>HC</th></tr></thead><tbody>';
+  let count = 0;
+  for(const id of lines){
+    for(const b of scopedHierarchy(id).bus){
+
+      for(const t of b.teams){
+        for(const s of t.subs){
+          for(const selectedIndex of selectedPeriods())for(const type of ['自有','劳务派遣']){
+            const n = 3+hash(id+b.name+t.name+s+type)%3;
+            html += `<tr style="background:#f0f4f8;font-weight:600"><td colspan="4">${2024+Math.floor(selectedIndex/12)}-${String(selectedIndex%12+1).padStart(2,'0')} · ${b.name} · ${t.name} · ${s} · ${type}（合计 HC：${n}）</td></tr>`;
+            for(let k=0;k<n;k++){
+              const h1 = hash(id+b.name+t.name+s+type+k);
+              const cn = SUR[h1%16]+GIV[(h1>>>4)%16], en = EGIV[(h1>>>4)%16]+' '+ESUR[h1%16];
+              html += `<tr><td>E${empSeq++}</td><td>${cn}</td><td>${en}</td><td>1</td></tr>`;
+              count++;
+            }
+          }
+        }
+      }
+    }
+  }
+  html += '</tbody></table>';
+  openModal('前台HC 明细（自有人员）',html,`共 ${count} 名员工 · Demo 数据为程序生成，仅演示交互 · 点击卡片 More 按钮触发`);
+}
+function openOverdueDetail(){
+  const t = state.page==='stf'?'STF看板中「逾期金额」「未开票金额」为两个独立指标，分别提供 More 跳转。':'';
+  const body = `<div class="newtab-note">演示：新标签页打开 · 携带当前筛选上下文 · 受 RLS 权限控制</div>
+  <div class="risk-card warn"><h4>🟡 展示字段待定</h4>
+  <div class="r-line">逾期金额 / 未开票金额明细跳转页<b>展示字段待定</b>（见开发文档第 8 章待确认事项5）。${t}</div>
+  <div class="r-line">字段确认后本页将展示明细（预计包含：月份 / Bu / Team / Subteam / 客户集团 / 逾期金额 / 未开票金额（含未关联）等，以业务方确认为准）。</div></div>`;
+  openModal('逾期 / 未开票 明细',body,'Demo 占位页 —— 待字段确认后补充实现');
+}
+function openNetAddDetail(){
+  const i = curIdx();
+  let rows = '';
+  for(const idx of selectedPeriods()){
+    if(idx<1) continue;
+    const cur = monthAggAt(idx), prev = monthAggAt(idx-1);
+    const beg = Math.round(prev.odHC), end = Math.round(cur.odHC);
+    rows += `<tr><td>${2024+Math.floor(idx/12)}-${String(idx%12+1).padStart(2,'0')}</td><td>${beg.toLocaleString('zh-CN')}</td><td>${end.toLocaleString('zh-CN')}</td><td class="${cls(end-beg)}">${(end-beg>=0?'+':'')+(end-beg).toLocaleString('zh-CN')}</td></tr>`;
+  }
+  const body = `<div class="newtab-note">演示：More 跳转 · 外包净增人数明细 · 携带当前筛选上下文 · 受 RLS 权限控制</div>
+  <div class="risk-card warn"><h4>🟡 实现方式待与产研讨论（见开发文档第 8 章待确认事项6）</h4>
+  <div class="r-line"><b>方式1</b>：跳转 <b>Quick BI · STF 双周会看板</b>（新标签页打开）；</div>
+  <div class="r-line"><b>方式2</b>：从 Quick BI 取部分字段，构建新的详情页。</div></div>
+  <div style="margin:10px 0 6px;font-weight:600;font-size:12.5px">方式2 效果预览（所选月份，模拟）</div>
+  <table><thead><tr><th>月份</th><th>期初外包在职</th><th>期末外包在职</th><th>净增人数</th></tr></thead><tbody>${rows}</tbody></table>`;
+  openModal('外包净增人数 明细',body,'Demo：两种方式待产研评估难易度与可行性后确定');
+}
+let lossDim = 'cust';
+function lossRows(){
+  const comps = {lz:.40,sq:.25,sb:.15,gs:.08,dg:.12};
+  const recs = [];
+  for(const c of customerData().filter(x=>x.line==='STF')){
+    const h = hash(c.name);
+    const loss = c.name==='铭泰能源科技'?0:c.nfi*0.03*(0.5+(h%10)/10); // 演示：铭泰能源科技总损耗=0，被过滤
+    if(!loss) continue;
+    recs.push({key:c.name,loss,lz:loss*comps.lz,sq:loss*comps.sq,sb:loss*comps.sb,gs:loss*comps.gs,dg:loss*comps.dg,team:c.team,sub:c.sub});
+  }
+  const groups = {};
+  if(lossDim==='month'){
+    for(const r of recs){
+      const h = hash(r.key);
+      for(const periodIndex of selectedPeriods()){
+        const mm=periodIndex%12+1;
+        const share = SEASON[mm-1]/selectedPeriods().reduce((v,i)=>v+SEASON[i%12],0);
+        const k = (2024+Math.floor(periodIndex/12))+'-'+String(mm).padStart(2,'0');
+        const g = groups[k]=groups[k]||{k,loss:0,lz:0,sq:0,sb:0,gs:0,dg:0};
+        g.loss+=r.loss*share;g.lz+=r.lz*share;g.sq+=r.sq*share;g.sb+=r.sb*share;g.gs+=r.gs*share;g.dg+=r.dg*share;
+      }
+    }
+  } else {
+    const dk = lossDim==='team'?'team':'sub';
+    for(const r of recs){
+      const k = lossDim==='cust'?r.key:r[dk];
+      const g = groups[k]=groups[k]||{k,loss:0,lz:0,sq:0,sb:0,gs:0,dg:0};
+      g.loss+=r.loss;g.lz+=r.lz;g.sq+=r.sq;g.sb+=r.sb;g.gs+=r.gs;g.dg+=r.dg;
+    }
+  }
+  return Object.values(groups).sort((a,b)=>b.loss-a.loss);
+}
+function openLossDetail(){
+  const dims = [['cust','客户集团（默认）'],['team','Team 维度'],['sub','Subteam 维度'],['month','时间维度（年月）']];
+  let body = '<div class="newtab-note">演示：新标签页打开 · 总损耗明细（仅展示总损耗≠0 的数据）· 携带当前筛选上下文 · 受 RLS 权限控制</div>';
+  body += `<div style="margin-bottom:10px">下钻维度：<select class="mini-select" onchange="lossDim=this.value;openLossDetail()">`+
+    dims.map(([k,v])=>`<option value="${k}" ${lossDim===k?'selected':''}>${v}</option>`).join('')+`</select></div>`;
+  const rows = lossRows();
+  body += '<table><thead><tr><th>维度值</th><th>总损耗</th><th>科锐承担离职补</th><th>三期成本</th><th>社保补缴金额</th><th>工伤成本</th><th>待岗成本</th></tr></thead><tbody>';
+  for(const r of rows){
+    body += `<tr><td>${r.k}</td><td class="down">-${fmtMoney2(r.loss)}</td><td>${fmtMoney2(r.lz)}</td><td>${fmtMoney2(r.sq)}</td><td>${fmtMoney2(r.sb)}</td><td>${fmtMoney2(r.gs)}</td><td>${fmtMoney2(r.dg)}</td></tr>`;
+  }
+  if(!rows.length) body += '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">无总损耗≠0 的数据</td></tr>';
+  body += '</tbody></table>';
+  openModal('总损耗明细',body,'字段：客户集团 / 总损耗 / 科锐承担离职补 / 三期成本 / 社保补缴金额 / 工伤成本 / 待岗成本 · Demo 模拟数据');
+}
+let custTopLevel = 'post';
+function openCustomerDetail(){
+  const dims = {post:'业务线',gNew:'集团新老客标签',lNew:'业务线新老客标签',nature:'客户性质',city:'大口径城市',ka:'KA分类'};
+  let body = '<div class="newtab-note">演示：新标签页打开 · 依托 Customer Report 的 Overall Analysis 页面 · 展示所有客户明细（不限 TOP10）</div>';
+  body += `<div style="margin-bottom:10px">Top Level（第一层聚合维度）：
+    <select class="mini-select" onchange="custTopLevel=this.value;openCustomerDetail()">`+
+    Object.entries(dims).map(([k,v])=>`<option value="${k}" ${custTopLevel===k?'selected':''}>${v}</option>`).join('')+
+    `</select> <span class="muted">· 点击行展开客户集团 → 再点击展开年月维度</span></div>`;
+  const groups = {};
+  const custAll = state.page==='stf'?stfCustFiltered():state.page==='cc'?ccCustFiltered():state.page==='rpo'?rpoCustFiltered():custFiltered();
+  for(const c of custAll){
+    const key = custTopLevel==='post'?(c.line==='OS'?'Oversea':c.line):custTopLevel==='ka'?(c.ka||'未分类'):c[custTopLevel];
+    (groups[key] = groups[key]||[]).push(c);
+  }
+  body += '<table><thead><tr><th>分组 / 客户集团 / 年月</th><th>客户数量</th><th>NFI</th><th>同期NFI</th><th>同比绝对值</th><th>同比</th><th>上期NFI</th><th>环比绝对值</th><th>环比</th></tr></thead><tbody>';
+  const open1 = window.__cdg||null, open2 = window.__cdc||null;
+  for(const g in groups){
+    const cs = groups[g];
+    const nfi = cs.reduce((s,c)=>s+c.nfi,0), cnt = cs.reduce((s,c)=>s+c.cnt,0);
+    const prev = cs.reduce((s,c)=>s+c.nfi/(1+c.yoy),0), last = cs.reduce((s,c)=>s+c.nfi/(1+c.mom),0);
+    const isOpen = open1===g;
+    body += `<tr class="row-expand" onclick="expandCd('CD:G','${g}')"><td>${isOpen?'▾ ':'▸ '}${g}</td><td>${cnt}</td><td>${fmtMoney2(nfi)}</td><td>${fmtMoney2(prev)}</td><td class="${cls(nfi-prev)}">${(nfi-prev>=0?'+':'')+fmtMoney2(nfi-prev)}</td><td>${yoySpan(nfi/prev-1)}</td><td>${fmtMoney2(last)}</td><td class="${cls(nfi-last)}">${(nfi-last>=0?'+':'')+fmtMoney2(nfi-last)}</td><td>${yoySpan(nfi/last-1)}</td></tr>`;
+    if(isOpen){
+      for(const c of cs){
+        const cOpen = open2===g+'|'+c.name;
+        const pv = c.nfi/(1+c.yoy), ls = c.nfi/(1+c.mom);
+        body += `<tr class="row-expand" style="background:#fafbfd" onclick="expandCd('CD:C','${g}|${c.name}')"><td style="padding-left:28px">${cOpen?'▾ ':'▸ '}${c.name}</td><td>${c.cnt}</td><td>${fmtMoney2(c.nfi)}</td><td>${fmtMoney2(pv)}</td><td class="${cls(c.nfi-pv)}">${(c.nfi-pv>=0?'+':'')+fmtMoney2(c.nfi-pv)}</td><td>${yoySpan(c.yoy)}</td><td>${fmtMoney2(ls)}</td><td class="${cls(c.nfi-ls)}">${(c.nfi-ls>=0?'+':'')+fmtMoney2(c.nfi-ls)}</td><td>${yoySpan(c.mom)}</td></tr>`;
+        if(cOpen){
+          const period=selectedPeriods(), series=SERIES[c.line].nfi;
+          const totalWeight=period.reduce((v,i)=>v+series[i],0);
+          for(const periodIndex of period){
+            const mm=periodIndex%12+1, yy=2024+Math.floor(periodIndex/12);
+            const v = totalWeight?c.nfi*series[periodIndex]/totalWeight:0;
+            body += `<tr style="color:#7a8699"><td style="padding-left:46px">${yy}-${String(mm).padStart(2,'0')}</td><td>—</td><td>${fmtMoney2(v)}</td><td>${fmtMoney2(v/(1+c.yoy))}</td><td>${(v-v/(1+c.yoy)>=0?'+':'')+fmtMoney2(v-v/(1+c.yoy))}</td><td>${yoySpan(c.yoy)}</td><td>${fmtMoney2(v/(1+c.mom))}</td><td>${(v-v/(1+c.mom)>=0?'+':'')+fmtMoney2(v-v/(1+c.mom))}</td><td>${yoySpan(c.mom)}</td></tr>`;
+          }
+        }
+      }
+    }
+  }
+  body += '</tbody></table>';
+  openModal('客户明细（Customer Report · Overall Analysis）',body,'Demo：客户集团可下钻至年月维度（点击展开）· 金额单位：'+state.unit);
+}
+function expandCd(key,val){
+  if(key==='CD:G'){ window.__cdg = (window.__cdg===val)?null:val; }
+  if(key==='CD:C'){ window.__cdc = (window.__cdc===val)?null:val; }
+  openCustomerDetail();
+}
+function openSstReport(){
+  const body = `<div class="newtab-note">演示：新标签页打开 · 跳转 SST 管理报告界面</div>
+  <div style="padding:30px;text-align:center;color:#7a8699">
+    <div style="font-size:28px;margin-bottom:10px">📊</div>
+    <div style="font-size:15px;margin-bottom:6px">SST 管理报告</div>
+    <div>Demo 占位页 —— 实际部署时此处为新标签页跳转至 SST 管理报告链接，并携带当前筛选上下文（如目标页支持）。</div>
+  </div>`;
+  openModal('SST 管理报告',body,'对应开发文档 V2.3 第 5.5.3 节');
+}
+
+/* ================= 页面切换 ================= */
+function stfVisible(){return roleLines().includes('STF');}
+function updatePageUI(){
+  const vis = stfVisible();
+  document.getElementById('ptab-cc').style.display = '';
+  document.getElementById('ptab-rpo').style.display = '';
+  document.getElementById('ptab-stf').style.display = vis?'':'none';
+  if(!vis && state.page==='stf'){state.page='main';state.stfTeam='ALL';}
+  document.getElementById('ptab-main').className = 'ptab'+(state.page==='main'?' on':'');
+  document.getElementById('ptab-stf').className = 'ptab'+(state.page==='stf'?' on':'');
+  document.getElementById('ptab-cc').className = 'ptab'+(state.page==='cc'?' on':'');
+  document.getElementById('ptab-rpo').className = 'ptab'+(state.page==='rpo'?' on':'');
+  document.getElementById('fg-line').style.display = (state.page==='stf'||state.page==='cc'||state.page==='rpo')?'none':'';
+  document.getElementById('cc-order-sec').style.display = state.page==='cc'?'block':'none';
+  const rpoKaTable=document.getElementById('rpo-ka-table');if(rpoKaTable) rpoKaTable.style.display=state.page==='rpo'?'block':'none';
+  document.getElementById('stf-matrix-tabs').style.display = state.page==='stf'?'flex':'none';
+  document.getElementById('cc-matrix-tabs').style.display = state.page==='cc'?'flex':'none';
+  if(state.page==='cc'){
+    document.getElementById('cc-tab-core').className='tab'+(state.ccMatrixTab==='core'?' on':'');
+    document.getElementById('cc-tab-biz').className='tab'+(state.ccMatrixTab==='biz'?' on':'');
+    document.getElementById('cc-tab-conv').className='tab'+(state.ccMatrixTab==='conv'?' on':'');
+  }
+  document.getElementById('cc-matrix-controls').style.display = state.page==='cc'?'flex':'none';
+  document.getElementById('rpo-matrix-tabs').style.display = state.page==='rpo'?'flex':'none';
+  document.getElementById('rpo-ka-controls').style.display = state.page==='rpo'?'flex':'none';
+  if(state.page==='rpo'){
+    document.getElementById('rpo-tab-core').className='tab'+(state.rpoMatrixTab==='core'?' on':'');
+    document.getElementById('rpo-tab-biz').className='tab'+(state.rpoMatrixTab==='biz'?' on':'');
+    renderRpoKaChips();
+  }
+  if(state.page==='stf'){
+    document.getElementById('stf-tab-core').className = 'tab'+(state.stfMatrixTab==='core'?' on':'');
+    document.getElementById('stf-tab-biz').className = 'tab'+(state.stfMatrixTab==='biz'?' on':'');
+  }
+  /* 动态模块编号：CC 页做单情况为模块D，客户/利润桥顺延；其他页做单不显示，客户为D、利润桥为E */
+  const isCc = state.page==='cc';
+  const setH=(id,txt)=>{const el=document.getElementById(id);if(el)el.textContent=txt;};
+  setH('hdr-a','模块A · KPI 卡片');
+  setH('hdr-b','模块B · 业务线矩阵');
+  setH('hdr-c','模块C · 动态趋势区');
+  setH('hdr-order', isCc?'模块D · 做单情况':'做单情况');
+  setH('hdr-d',(isCc?'模块E':'模块D')+' · 核心客户影响');
+  setH('hdr-e',(isCc?'模块F':'模块E')+' · 利润解释桥');
+}
+function switchCcMatrixTab(t){
+  state.ccMatrixTab=t;
+  document.getElementById('cc-tab-core').className='tab'+(t==='core'?' on':'');
+  document.getElementById('cc-tab-biz').className='tab'+(t==='biz'?' on':'');
+  document.getElementById('cc-tab-conv').className='tab'+(t==='conv'?' on':'');
+  renderMatrix();
+}
+function switchStfMatrixTab(t){
+  state.stfMatrixTab = t;
+  document.getElementById('stf-tab-core').className = 'tab'+(t==='core'?' on':'');
+  document.getElementById('stf-tab-biz').className = 'tab'+(t==='biz'?' on':'');
+  renderMatrix();
+}
+function switchPage(p){
+  const required={stf:'STF',cc:'CC',rpo:'RPO'}[p];
+  if(required&&!roleLines().includes(required))return;
+  if(state.page===p) return;
+  state.page = p;
+  const customerControl=multiControls.get('f-custgroup');if(customerControl)customerControl.input.value='';
+  for(const k of ['line','bu','team','head','custGroup'])multiState[k]=[];
+  syncLegacySelection();
+  if(p==='cc'){state.line='CC';state.bu='ALL';state.ccMatrixTab='core';} if(p==='rpo'){state.line='RPO';state.bu='ALL';state.rpoMatrixTab='core';state.rpoKa=[];rpoDExpanded.clear();state.rpoTeam='ALL';state.custLine='ALL';} state.stfTeam='ALL'; state.ccTeam='ALL'; state.bu='ALL'; state.team='ALL'; state.head='ALL'; state.ccOrderTab='top'; state.ccOrderExpanded.clear(); expanded.clear();
+  renderAll();
+}
+
+/* ================= 总渲染 ================= */
+function renderAll(){
+  refreshStaticMulti();
+  updatePageUI();
+  refreshLineOptions();
+  refreshBuOptions();
+  refreshTeamOptions();
+  refreshHeadOptions();
+  refreshCustGroupOptions();
+  refreshCustFilter();
+  renderRoleBanner();
+  renderKPIs();
+  renderMatrix();
+  renderCcOrder();
+  renderTrend();
+  renderCustomers();
+  renderBridge();
+  renderRisks();
+}
+// Multi-select controls share selection state across dashboard views.
+const multiState={role:['BuLeader'],year:['2026'],month:['8'],line:[],bu:[],team:[],head:[],custGroup:[]};
+const multiControls=new Map();
+function selected(key,value){return !multiState[key].length||multiState[key].includes(String(value));}
+function roleLines(){return [...new Set(multiState.role.flatMap(r=>ROLES[r].lines))];}
+function basePageLines(){return state.page==='stf'?['STF','STFOD']:state.page==='cc'?['CC']:state.page==='rpo'?['RPO']:roleLines().filter(id=>selected('line',id));}
+function orgLeaves(id,through='head'){
+  const heads=HEADS.filter(h=>multiState.head.includes(h.id)), out=[];
+  for(const b of HIER[id].bus)for(const t of b.teams)for(const sub of t.subs){
+    if(!selected('bu',b.name))continue;
+    if(through!=='bu'&&multiState.team.length&&!multiState.team.some(v=>v===t.name||v===sub))continue;
+    if(through==='head'&&multiState.head.length&&!heads.some(h=>h.line===id&&h.bu===b.name&&(!h.team||h.team===t.name)&&(!h.sub||h.sub===sub)))continue;
+    out.push({bu:b.name,team:t.name,sub,w:b.w*t.w/t.subs.length});
+  }
+  return out;
+}
+function scopedHierarchy(id){
+  const leaves=orgLeaves(id);
+  return {bus:HIER[id].bus.map(b=>{
+    const own=leaves.filter(l=>l.bu===b.name),w=own.reduce((v,l)=>v+l.w,0);
+    return {...b,w,teams:b.teams.map(t=>{const ls=own.filter(l=>l.team===t.name);return {...t,w:w?ls.reduce((v,l)=>v+l.w,0)/w:0,subs:ls.map(l=>l.sub)};}).filter(t=>t.subs.length)};
+  }).filter(b=>b.w>0)};
+}
+function selectedPeriods(offset=0){return [...new Set(multiState.year.flatMap(y=>multiState.month.map(m=>idxOf(+y,+m)+offset)))].sort((a,b)=>a-b).filter(i=>i>=0&&i<36);}
+function periodCaption(){return multiState.year.join('、')+'年 · '+multiState.month.slice().sort((a,b)=>a-b).join('、')+'月';}
+function syncLegacySelection(){
+  state.role=['BuLeader','TeamLeader','SubteamLeader','SquadHead'].find(r=>multiState.role.includes(r));
+  state.year=Math.max(...multiState.year.map(Number));state.month=Math.max(...multiState.month.map(Number));
+  for(const key of ['line','bu','team','head','custGroup'])state[key]=multiState[key].length===1?multiState[key][0]:'ALL';
+}
+function changeMulti(key,values){
+  if(['role','year','month'].includes(key)&&!values.length)return;
+  multiState[key]=values;
+  if(key==='role'){for(const k of ['line','bu','team','head'])multiState[k]=[];state.stfTeam=state.ccTeam=state.rpoTeam='ALL';}
+  if(key==='line')for(const k of ['bu','team','head'])multiState[k]=[];
+  if(key==='bu')for(const k of ['team','head'])multiState[k]=[];
+  if(key==='team')multiState.head=[];
+  syncLegacySelection();expanded.clear();rpoDExpanded.clear();state.ccOrderExpanded.clear();
+  if(key==='custGroup')renderCustomers();else renderAll();
+}
+function setMultiOptions(id,key,options,{search=false,required=false,label='全部',placeholder='搜索选项'}={}){
+  const select=document.getElementById(id), unique=[...new Map(options.map(o=>[String(o.value),{...o,value:String(o.value)}])).values()];
+  const allowed=new Set(unique.flatMap(o=>[o.value,...(o.children||[]).map(c=>c.value)]));
+  multiState[key]=multiState[key].filter(v=>allowed.has(v));
+  if(required&&!multiState[key].length&&unique.length)multiState[key]=[unique[0].value];
+  select.replaceChildren();select.multiple=true;select.hidden=true;
+  unique.forEach(o=>{const el=document.createElement('option');el.value=o.value;el.textContent=o.label;el.selected=multiState[key].includes(o.value);select.appendChild(el);});
+  let control=multiControls.get(id);
+  if(!control){
+    const wrap=document.createElement('div');wrap.className='multi-select';
+    const button=document.createElement('button');button.type='button';button.className='multi-trigger';button.setAttribute('aria-expanded','false');
+    const panel=document.createElement('div');panel.className='multi-panel';panel.hidden=true;
+    const input=document.createElement('input');input.type='search';input.placeholder=placeholder;input.setAttribute('aria-label',placeholder);input.className='multi-search';input.hidden=!search;
+    const actions=document.createElement('div');actions.className='multi-actions';
+    const all=document.createElement('button');all.type='button';all.textContent='全选';
+    const clear=document.createElement('button');clear.type='button';clear.textContent='清空';clear.hidden=required;
+    const list=document.createElement('div');list.className='multi-list';
+    actions.append(all,clear);panel.append(input,actions,list);wrap.append(button,panel);select.after(wrap);
+    control={wrap,button,panel,input,list,key,options:unique,label,required,expanded:new Set()};multiControls.set(id,control);
+    button.addEventListener('click',()=>{
+      const open=panel.hidden;
+      for(const other of multiControls.values()){other.panel.hidden=true;other.button.setAttribute('aria-expanded','false');}
+      panel.hidden=!open;button.setAttribute('aria-expanded',String(open));if(open&&search)input.focus();
+    });
+    input.addEventListener('input',()=>paintMulti(control));
+    all.addEventListener('click',()=>{
+      const matches=control.options.filter(o=>o.label.toLowerCase().includes(input.value.trim().toLowerCase())).map(o=>o.value);
+      changeMulti(key,[...new Set([...multiState[key],...matches])]);paintMulti(control);
+    });
+    clear.addEventListener('click',()=>{changeMulti(key,[]);paintMulti(control);});
+    panel.addEventListener('keydown',e=>{if(e.key==='Escape'){panel.hidden=true;button.setAttribute('aria-expanded','false');button.focus();}});
+  }
+  Object.assign(control,{options:unique,label});control.input.hidden=!search;control.input.placeholder=placeholder;control.input.setAttribute('aria-label',placeholder);paintMulti(control);syncLegacySelection();
+}
+function paintMulti(control){
+  const {key,button,input,list,options,label}=control, picks=multiState[key], chosen=options.flatMap(o=>[o,...(o.children||[])]).filter(o=>picks.includes(o.value));
+  button.textContent=(chosen.length?chosen.length===1?chosen[0].label:'已选 '+chosen.length+' 项':label)+' ▾';
+  button.title=chosen.length?chosen.map(o=>o.label).join('、'):label;
+  const fieldNames={role:'角色',year:'年份',month:'月份',line:'业务线',bu:'Bu',team:'Team / Subteam',head:'负责人',custGroup:'客户集团'};
+  button.setAttribute('aria-label',fieldNames[key]+'：'+button.title);
+  list.replaceChildren();
+  const q=input.value.trim().toLowerCase();
+  const results=options.filter(o=>o.label.toLowerCase().includes(q)||(o.children||[]).some(c=>c.label.toLowerCase().includes(q)));
+  for(const option of results){
+    const kids=option.children||[], childOnly=q&&!option.label.toLowerCase().includes(q), open=control.expanded.has(option.value)||childOnly;
+    const rowEl=document.createElement('div');rowEl.className='multi-row';
+    const row=document.createElement('label');row.className='multi-option';
+    const check=document.createElement('input');check.type='checkbox';check.value=option.value;check.checked=picks.includes(option.value);
+    const text=document.createElement('span');text.textContent=option.label;row.append(check,text);rowEl.append(row);
+    check.addEventListener('change',()=>{const values=check.checked?[...multiState[key],option.value]:multiState[key].filter(v=>v!==option.value);changeMulti(key,values);paintMulti(control);});
+    if(kids.length){
+      const toggle=document.createElement('button');toggle.type='button';toggle.className='multi-toggle';toggle.textContent=open?'▾':'▸';
+      toggle.setAttribute('aria-label',(open?'收起':'展开')+' Subteam');
+      toggle.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(control.expanded.has(option.value))control.expanded.delete(option.value);else control.expanded.add(option.value);paintMulti(control);});
+      rowEl.append(toggle);
+    }
+    list.appendChild(rowEl);
+    if(kids.length&&open){
+      const shown=childOnly?kids.filter(c=>c.label.toLowerCase().includes(q)):kids;
+      for(const child of shown){
+        const crow=document.createElement('label');crow.className='multi-option child';
+        const ccheck=document.createElement('input');ccheck.type='checkbox';ccheck.value=child.value;ccheck.checked=picks.includes(child.value);
+        const ctext=document.createElement('span');ctext.textContent=child.label;crow.append(ccheck,ctext);list.appendChild(crow);
+        ccheck.addEventListener('change',()=>{const values=ccheck.checked?[...multiState[key],child.value]:multiState[key].filter(v=>v!==child.value);changeMulti(key,values);paintMulti(control);});
+      }
+    }
+  }
+  if(!results.length){const empty=document.createElement('div');empty.className='multi-empty';empty.textContent='没有匹配的选项';list.appendChild(empty);}
+}
+document.addEventListener('click',e=>{for(const c of multiControls.values())if(!c.wrap.contains(e.target)){c.panel.hidden=true;c.button.setAttribute('aria-expanded','false');}});
+function refreshStaticMulti(){
+  setMultiOptions('f-role','role',Object.entries(ROLES).map(([value,r])=>({value,label:r.label})),{required:true});
+  setMultiOptions('f-year','year',[2025,2026].map(value=>({value,label:String(value)})),{required:true});
+  setMultiOptions('f-month','month',Array.from({length:12},(_,i)=>({value:i+1,label:(i+1)+'月'})),{required:true});
+}
+function refreshLineOptions(){setMultiOptions('f-line','line',roleLines().map(id=>({value:id,label:LINE_CFG[id].name})));}
+function filterScopeLines(){return basePageLines();}
+function refreshBuOptions(){setMultiOptions('f-bu','bu',basePageLines().flatMap(id=>HIER[id].bus.map(b=>({value:b.name,label:b.name}))));}
+function refreshTeamOptions(){setMultiOptions('f-teamf','team',basePageLines().flatMap(id=>HIER[id].bus.filter(b=>selected('bu',b.name)).flatMap(b=>b.teams.map(t=>({value:t.name,label:t.name,children:t.subs.map(sub=>({value:sub,label:sub}))})))),{search:true,placeholder:'搜索团队名称'});}
+function refreshHeadOptions(){
+  const lines=basePageLines();
+  const heads=HEADS.filter(h=>lines.includes(h.line)&&selected('bu',h.bu)&&(!multiState.team.length||multiState.team.some(t=>t===h.team||t===h.sub||HIER[h.line].bus.some(b=>b.name===h.bu&&b.teams.some(x=>x.name===t&&x.subs.includes(h.sub))))));
+  setMultiOptions('f-headf','head',heads.map(h=>({value:h.id,label:h.name+'（'+h.org+' · '+h.level+'）'})));
+}
+function customerOrg(c){
+  const teams=HIER[c.line].bus.flatMap(b=>b.teams.map(t=>({...t,bu:b.name}))),index=CUSTOMERS.filter(x=>x.line===c.line).findIndex(x=>x.name===c.name);
+  const team=teams.find(t=>t.name===c.team)||teams[index%teams.length];
+  return {bu:team.bu,team:team.name,sub:c.sub||team.subs[index%team.subs.length]};
+}
+function scopedCustomers(){
+  const lines=basePageLines().map(id=>id==='STFOD'?'STF':id);
+  return CUSTOMERS.filter(c=>lines.includes(c.line)).filter(c=>{const org=customerOrg(c);return orgLeaves(c.line).some(l=>l.bu===org.bu&&l.team===org.team&&l.sub===org.sub);});
+}
+function refreshCustGroupOptions(){setMultiOptions('f-custgroup','custGroup',scopedCustomers().map(c=>({value:c.name,label:c.name})),{search:true,label:'全部客户',placeholder:'搜索客户名称'});}
+function customerData(){
+  return scopedCustomers().map(c=>{
+    const indices=selectedPeriods(),prev=selectedPeriods(-12),series=SERIES[c.line].nfi;
+    const curScale=indices.reduce((v,i)=>v+series[i],0)/series[idxOf(2026,8)];
+    const prevScale=prev.reduce((v,i)=>v+series[i],0)/series[idxOf(2025,8)];
+    const lastScale=selectedPeriods(-1).reduce((v,i)=>v+series[i],0)/series[idxOf(2026,7)];
+    const nfi=c.nfi*curScale,prior=c.nfi/(1+c.yoy)*prevScale,last=c.nfi/(1+c.mom)*lastScale;
+    const org=customerOrg(c);
+    return {...c,team:org.team,sub:org.sub,nfi,yoy:prior?nfi/prior-1:0,mom:last?nfi/last-1:0};
+  });
+}
+// Amounts add across selected months; HC averages, point-in-time balances use the last month.
+function combinePeriods(rows){
+  if(!rows.length)return {};
+  if(rows.length===1)return {...rows[0]};
+  const n={},sum=k=>rows.reduce((v,r)=>v+(Number.isFinite(r[k])?r[k]:0),0),ratio=(a,b)=>b?a/b:0;
+  for(const key of Object.keys(rows[0]))n[key]=sum(key);
+  for(const key of ['hc','odHC','monthlyOnsite','hcPrev'])n[key]=sum(key)/rows.length;
+  for(const key of ['overdue','overdueAmt','unbilled','odHCPoint'])n[key]=rows[rows.length-1][key];
+  n.nfiRate=ratio(n.nfi,n.rev);n.npatPct=ratio(rows.reduce((v,r)=>v+r.npatPct*r.rev,0),n.rev);
+  n.npatPost=ratio(rows.reduce((v,r)=>v+r.npatPost*r.rev,0),n.rev);
+  n.budgetPct=ratio(n.rev,n.budgetAmount);n.cph=ratio(n.nfi,n.hc);n.lossRate=ratio(n.loss,n.nfi);
+  n.offerAvg=ratio(n.offerAmt,n.offerCount);n.offerPerHC=ratio(n.offerAmt,n.hc);
+  n.reportToInterview=ratio(n.interviewCount,n.reportCount);n.interviewToOffer=ratio(n.offerCount,n.interviewCount);
+  n.reportPerInterview=ratio(n.reportCount,n.interviewCount);n.interviewPerOffer=ratio(n.interviewCount,n.offerCount);
+  return n;
+}
+function periodNode(id,i,mult,stf=false){
+  const make=j=>stf?singleStfNode(id,j,mult):singleNode(id,j,mult);
+  const period=selectedPeriods(i-curIdx());
+  const n=combinePeriods(period.map(make));
+  const prior=period.map(j=>j-12);
+  const prev=prior.every(j=>j>=0)?combinePeriods(prior.map(make)):null;
+  for(const [key,ykey] of [['rev','revY'],['nfi','nfiY'],['hc','hcY'],['cph','cphY'],['overdue','odY'],['odHCPoint','odHCPointY'],['odHC','odHCY'],['netAdd','netAddY'],['loss','lossY']])n[ykey]=prev&&prev[key]?n[key]/prev[key]-1:0;
+  for(const [key,ykey] of [['nfiRate','rateY'],['npatPct','npatY'],['npatPost','npatPostY'],['lossRate','lossRateY']])n[ykey]=prev?n[key]-prev[key]:0;
+  return n;
+}
+function nodeMetrics(id,i,mult){return periodNode(id,i,mult);}
+function stfNodeMetrics(id,i,mult){return periodNode(id,i,mult,true);}
+function aggAt(i){return combinePeriods(selectedPeriods(i-curIdx()).map(monthAggAt));}
+
+initFilters();
+renderAll();
+</script>
+</body>
+</html>
