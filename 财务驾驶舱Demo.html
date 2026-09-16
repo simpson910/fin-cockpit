@@ -1644,51 +1644,70 @@ function openNetAddDetail(){
   body += '</tbody></table>';
   openModal('外包净增人数 明细（方式2 · 自建详情页）',body,'字段：客户集团 / 外包时点在职人数 / 净增人数 / 净增人数同比差 / 入职人数 / 入职人数同比差 / 离职人数 / 离职人数同比差 · 其中入职、离职及三项同比差为清单外新增字段 · Demo 模拟数据');
 }
-let lossDim = 'cust';
-function lossRows(){
+let lossGrp = {team:false,sub:false,month:false};
+let lossOpen = null;
+function lossToggle(k){ lossOpen = (lossOpen===k)?null:k; openLossDetail(); }
+function lossData(){
   const comps = {lz:.40,sq:.25,sb:.15,gs:.08,dg:.12};
   const recs = [];
   for(const c of customerData().filter(x=>x.line==='STF')){
     const h = hash(c.name);
     const loss = c.name==='铭泰能源科技'?0:c.nfi*0.03*(0.5+(h%10)/10); // 演示：铭泰能源科技总损耗=0，被过滤
     if(!loss) continue;
-    recs.push({key:c.name,loss,lz:loss*comps.lz,sq:loss*comps.sq,sb:loss*comps.sb,gs:loss*comps.gs,dg:loss*comps.dg,team:c.team,sub:c.sub});
+    recs.push({cust:c.name,loss,nfi:c.nfi,lz:loss*comps.lz,sq:loss*comps.sq,sb:loss*comps.sb,gs:loss*comps.gs,dg:loss*comps.dg,team:c.team,sub:c.sub});
   }
+  // 时间维度选中时：按所选月份展开（损耗与 NFI 按季节系数分摊）
+  let rows = recs;
+  if(lossGrp.month){
+    const ps = selectedPeriods();
+    const tot = ps.reduce((v,i)=>v+SEASON[i%12],0);
+    const exp = [];
+    for(const r of recs) for(const pi of ps){
+      const mm = pi%12+1, share = tot?SEASON[mm-1]/tot:1/ps.length;
+      exp.push({...r, month:(2024+Math.floor(pi/12))+'-'+String(mm).padStart(2,'0'), loss:r.loss*share, nfi:r.nfi*share, lz:r.lz*share, sq:r.sq*share, sb:r.sb*share, gs:r.gs*share, dg:r.dg*share});
+    }
+    rows = exp;
+  }
+  // 分组：不选维度时按客户集团直开；选中后第一层按所选维度聚合（Team→Subteam→时间），下钻至客户集团
   const groups = {};
-  if(lossDim==='month'){
-    for(const r of recs){
-      const h = hash(r.key);
-      for(const periodIndex of selectedPeriods()){
-        const mm=periodIndex%12+1;
-        const share = SEASON[mm-1]/selectedPeriods().reduce((v,i)=>v+SEASON[i%12],0);
-        const k = (2024+Math.floor(periodIndex/12))+'-'+String(mm).padStart(2,'0');
-        const g = groups[k]=groups[k]||{k,loss:0,lz:0,sq:0,sb:0,gs:0,dg:0};
-        g.loss+=r.loss*share;g.lz+=r.lz*share;g.sq+=r.sq*share;g.sb+=r.sb*share;g.gs+=r.gs*share;g.dg+=r.dg*share;
-      }
-    }
-  } else {
-    const dk = lossDim==='team'?'team':'sub';
-    for(const r of recs){
-      const k = lossDim==='cust'?r.key:r[dk];
-      const g = groups[k]=groups[k]||{k,loss:0,lz:0,sq:0,sb:0,gs:0,dg:0};
-      g.loss+=r.loss;g.lz+=r.lz;g.sq+=r.sq;g.sb+=r.sb;g.gs+=r.gs;g.dg+=r.dg;
-    }
+  for(const r of rows){
+    const gk = [lossGrp.team?r.team:'', lossGrp.sub?r.sub:'', lossGrp.month?r.month:''].filter(Boolean).join(' / ');
+    const g = groups[gk] = groups[gk]||{k:gk,loss:0,nfi:0,lz:0,sq:0,sb:0,gs:0,dg:0,custs:{}};
+    g.loss+=r.loss;g.nfi+=r.nfi;g.lz+=r.lz;g.sq+=r.sq;g.sb+=r.sb;g.gs+=r.gs;g.dg+=r.dg;
+    const cc = g.custs[r.cust] = g.custs[r.cust]||{k:r.cust,loss:0,nfi:0,lz:0,sq:0,sb:0,gs:0,dg:0};
+    cc.loss+=r.loss;cc.nfi+=r.nfi;cc.lz+=r.lz;cc.sq+=r.sq;cc.sb+=r.sb;cc.gs+=r.gs;cc.dg+=r.dg;
   }
   return Object.values(groups).sort((a,b)=>b.loss-a.loss);
 }
 function openLossDetail(){
-  const dims = [['cust','客户集团（默认）'],['team','Team 维度'],['sub','Subteam 维度'],['month','时间维度（年月）']];
+  const anyGrp = lossGrp.team||lossGrp.sub||lossGrp.month;
+  const chips = [['team','Team'],['sub','Subteam'],['month','时间维度']].map(([k,v])=>
+    `<label style="margin-right:12px;cursor:pointer"><input type="checkbox" ${lossGrp[k]?'checked':''} onchange="lossGrp.${k}=this.checked;lossOpen=null;openLossDetail()"> ${v}</label>`).join('');
   let body = '<div class="newtab-note">演示：新标签页打开 · 总损耗明细（仅展示总损耗≠0 的数据）· 携带当前筛选上下文 · 受 RLS 权限控制</div>';
-  body += `<div style="margin-bottom:10px">下钻维度：<select class="mini-select" onchange="lossDim=this.value;openLossDetail()">`+
-    dims.map(([k,v])=>`<option value="${k}" ${lossDim===k?'selected':''}>${v}</option>`).join('')+`</select></div>`;
-  const rows = lossRows();
-  body += '<table><thead><tr><th>维度值</th><th>总损耗</th><th>科锐承担离职补</th><th>三期成本</th><th>社保补缴金额</th><th>工伤成本</th><th>待岗成本</th></tr></thead><tbody>';
-  for(const r of rows){
-    body += `<tr><td>${r.k}</td><td class="down">-${fmtMoney2(r.loss)}</td><td>${fmtMoney2(r.lz)}</td><td>${fmtMoney2(r.sq)}</td><td>${fmtMoney2(r.sb)}</td><td>${fmtMoney2(r.gs)}</td><td>${fmtMoney2(r.dg)}</td></tr>`;
+  body += `<div style="margin-bottom:10px;font-size:12.5px">下钻维度（Team / Subteam / 时间维度可多选，不选时默认按 客户集团 展开；选中后第一层按所选维度聚合，下钻至 客户集团）：${chips}</div>`;
+  const pct = r => r.nfi?fmtPct(r.loss/r.nfi):'—';
+  const cells = r => `<td>${pct(r)}</td><td class="down">-${fmtMoney2(r.loss)}</td><td>${fmtMoney2(r.lz)}</td><td>${fmtMoney2(r.sq)}</td><td>${fmtMoney2(r.sb)}</td><td>${fmtMoney2(r.gs)}</td><td>${fmtMoney2(r.dg)}</td>`;
+  body += `<table><thead><tr><th>${anyGrp?'分组维度 / 客户集团':'客户集团'}</th><th>总损耗NFI占比</th><th>总损耗</th><th>科锐承担离职补</th><th>三期成本</th><th>社保补缴金额</th><th>工伤成本</th><th>待岗成本</th></tr></thead><tbody>`;
+  const groups = lossData();
+  if(anyGrp){
+    for(const g of groups){
+      const open = lossOpen===g.k;
+      body += `<tr class="row-expand" style="background:#f0f4f8;font-weight:600" onclick="lossToggle('${g.k}')"><td>${open?'▾ ':'▸ '}${g.k}</td>${cells(g)}</tr>`;
+      if(open){
+        const custs = Object.values(g.custs).sort((a,b)=>b.loss-a.loss);
+        for(const c of custs) body += `<tr><td style="padding-left:26px">${c.k}</td>${cells(c)}</tr>`;
+      }
+    }
+    if(!groups.length) body += '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">无总损耗≠0 的数据</td></tr>';
+  } else {
+    const custs = [];
+    for(const g of groups) for(const c of Object.values(g.custs)) custs.push(c);
+    custs.sort((a,b)=>b.loss-a.loss);
+    for(const c of custs) body += `<tr><td>${c.k}</td>${cells(c)}</tr>`;
+    if(!custs.length) body += '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">无总损耗≠0 的数据</td></tr>';
   }
-  if(!rows.length) body += '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">无总损耗≠0 的数据</td></tr>';
   body += '</tbody></table>';
-  openModal('总损耗明细',body,'字段：客户集团 / 总损耗 / 科锐承担离职补 / 三期成本 / 社保补缴金额 / 工伤成本 / 待岗成本 · Demo 模拟数据');
+  openModal('总损耗明细',body,'字段：总损耗NFI占比（总损耗/NFI）/ 客户集团 / 总损耗 / 科锐承担离职补 / 三期成本 / 社保补缴金额 / 工伤成本 / 待岗成本 · 下钻维度默认客户集团，Team/Subteam/时间维度可多选，选中后第一层按所选维度聚合、下钻至客户集团 · Demo 模拟数据');
 }
 let custTopLevel = 'none';
 function openCustomerDetail(){
