@@ -213,7 +213,7 @@ tr.summary-row td{background:#f0f4f8;font-weight:600;border-top:2px solid #dce2e
   <div class="sec" data-page-node-id="RAGDCTEMv8XKHOKbfEcahD">
     <div class="sec-hd" data-page-node-id="oT5DjiiUeFSkRuqbJo7mWd">
       <h2 id="hdr-a" data-page-node-id="0bx9TFADrivBN0J6AySe40">模块A · KPI 卡片</h2>
-      <span class="sub" data-page-node-id="77aFV0WmD9NpkkBWCsB4xl">点击卡片可联动趋势区（方式2 演示，预算进度除外）</span>
+      <span class="sub" data-page-node-id="77aFV0WmD9NpkkBWCsB4xl">趋势区指标通过模块C 下拉选择器切换（方式1）</span>
     </div>
     <div id="kpi-wrap" data-page-node-id="DbDrHa5b8jesEAgwwdPgrf"></div>
     <div class="hint" style="text-align:right" data-page-node-id="FNzaotuIsAx3QmKUHAIHUB">注：未开票含未关联部分</div>
@@ -408,7 +408,6 @@ const BASE_METRICS = ['rev','nfi','nfiRate','npatPct','npatPost','hc','cph','ove
 const CC_METRICS = ['offerAmt','offerCount','offerAvg','offerPerHC','reportCount','interviewCount','reportToInterview','interviewToOffer','reportPerInterview','interviewPerOffer'];
 const RPO_METRICS = ['fixedRev','varRev','monthlyOnsite'];
 function pageMetricKeys(){return (state.page==='stf'?BASE_METRICS.concat(['odHCPoint','odHC','netAdd','loss','lossRate']):state.page==='cc'?BASE_METRICS.concat(CC_METRICS):state.page==='rpo'?BASE_METRICS.concat(RPO_METRICS):BASE_METRICS).filter(k=>k!=='npatPost'||state.role==='BuLeader');}
-function pageMetricSet(){return new Set(pageMetricKeys());}
 
 /* ================= 状态 ================= */
 const state = {role:'BuLeader',unit:'千元',year:2026,month:8,line:'ALL',bu:'ALL',team:'ALL',head:'ALL',custGroup:'ALL',metric:'rev',trendDim:'month',custLine:'ALL',custTab:'top',page:'main',stfTeam:'ALL',ccTeam:'ALL',stfMatrixTab:'core',ccMatrixTab:'core',ccRegions:[],ccOrderTab:'top',ccOrderShowAll:false,ccOrderExpanded:new Set(),rpoKa:[],rpoMatrixTab:'core',rpoKaTab:'ka',rpoTeam:'ALL'};
@@ -570,7 +569,6 @@ function renderKPIs(){
   const {a,y,m} = getAgg();
   const isBu = state.role==='BuLeader';
   const isStf = state.page==='stf';
-  const pset = pageMetricSet();
   const cards = [
     {key:'rev',label:'Rev'},
     {key:'nfi',label:'NFI'},
@@ -627,8 +625,7 @@ function renderKPIs(){
       cmpHtml = parts.join('');
     }
     const moreBtn = c.more?`<button class="more-btn" onclick="event.stopPropagation();${moreAction(c.more)}">More</button>`:'';
-    const clickable = pset.has(c.key);
-    return `<div class="kpi ${clickable?'':'nolink'}" ${clickable?`onclick="kpiClick('${c.key}')"`:''} title="${clickable?'点击联动趋势区':''}">
+    return `<div class="kpi nolink">
       <div class="k-label">${c.label}${c.tag?`<span class="k-tag">${c.tag}</span>`:''}</div>
       <div class="k-val">${valHtml}<span class="k-unit">${unitHtml}</span></div>
       <div class="k-cmp">${cmpHtml}</div>${moreBtn}
@@ -686,7 +683,6 @@ function ccFunnelHtml(a,y,m){
     ${node('人均月均Offer数',Math.round(a.offerCount).toLocaleString('zh-CN'),y?numChip(a.offerCount,y.offerCount):'')}
   </div>`;
 }
-function kpiClick(key){state.metric=key;document.getElementById('f-metric').value=key;renderTrend();}
 
 /* ================= 模块B 矩阵 ================= */
 function singleNode(id,i,mult){
@@ -1539,9 +1535,21 @@ function openHcDetail(){
   openModal(isCr?'前台HC明细':'前台HC 明细（自有人员）',html,`共 ${count} 名员工 · Demo 数据为程序生成，仅演示交互 · 点击卡片 More 按钮触发${isCr?' · 后台HC按 workforce 折算，不做展示':''}`);
 }
 let odGrp = {line:false,team:false,sub:false};
-let odFilter = {line:'ALL',cust:'ALL'};
+let odFilter = {line:'ALL',custs:[],custOpen:false,custQ:''};
 let odMode = '';
-function odReset(){ odFilter = {line:'ALL',cust:'ALL'}; openOverdueDetail(odMode); }
+let odCustOptions = [];
+function odReset(){ odFilter = {line:'ALL',custs:[],custOpen:false,custQ:''}; openOverdueDetail(odMode); }
+/* 资金明细页客户集团筛选：多选 + 搜索（交互与总筛选器一致） */
+function odCustToggle(e){ e.stopPropagation(); odFilter.custOpen=!odFilter.custOpen; openOverdueDetail(odMode); }
+function odCustChange(name,checked){ odFilter.custs = checked?[...new Set([...odFilter.custs,name])]:odFilter.custs.filter(v=>v!==name); openOverdueDetail(odMode); }
+function odCustAll(){ odFilter.custs = odCustOptions.slice(); openOverdueDetail(odMode); }
+function odCustClear(){ odFilter.custs = []; openOverdueDetail(odMode); }
+function odCustSearch(v){ odFilter.custQ = v; odCustPaintList(); }
+function odCustPaintList(){
+  const list = document.getElementById('od-cust-list'); if(!list) return;
+  const q = odFilter.custQ.trim().toLowerCase();
+  list.querySelectorAll('label').forEach(el=>{ el.style.display = (!q||el.textContent.toLowerCase().includes(q))?'':'none'; });
+}
 function odCustOrg(c){
   const lid = HIER[c.line]?c.line:'STF';
   const teams = HIER[lid].bus.flatMap(b=>b.teams);
@@ -1568,7 +1576,8 @@ function openOverdueDetail(mode){
   else lineOpts = [...new Set(cs.map(c=>c.line))];
   if(odFilter.line!=='ALL' && lineOpts.includes(odFilter.line)) cs = cs.filter(c=>c.line===odFilter.line);
   const custNames = [...new Set(cs.map(c=>c.name))].sort((a,b)=>a.localeCompare(b,'zh'));
-  if(odFilter.cust!=='ALL' && custNames.includes(odFilter.cust)) cs = cs.filter(c=>c.name===odFilter.cust);
+  if(odFilter.custs.length) cs = cs.filter(c=>odFilter.custs.includes(c.name));
+  odCustOptions = custNames;
   const i = curIdx(), mm = i%12+1, yy = 2024+Math.floor(i/12);
   const fut = n => { const t=mm+n, mo=((t-1)%12+1), y2=yy+Math.floor((t-1)/12); return y2+'-'+String(mo).padStart(2,'0'); };
   const odTable = (kind) => {
@@ -1628,7 +1637,7 @@ function openOverdueDetail(mode){
   const card = (label,val,sub,hl) => `<div style="flex:1;min-width:180px;background:#f7f9fb;border:1px solid #e3e8ef;border-radius:8px;padding:12px 14px${hl?';box-shadow:inset 3px 0 0 #4a7db5':''}"><div class="muted" style="font-size:12px">${label}</div><div style="font-size:20px;font-weight:700;margin:4px 0">${fmtMoney(val)} <span class="muted" style="font-size:12px;font-weight:400">${unitLabel()}</span></div><div class="muted" style="font-size:11px">${sub||''}</div></div>`;
   const grpChips = [['line','业务线'],['team','Team'],['sub','Subteam']].map(([k,v])=>
     `<label style="margin-right:12px;cursor:pointer"><input type="checkbox" ${odGrp[k]?'checked':''} onchange="odGrp.${k}=this.checked;openOverdueDetail(odMode)"> ${v}</label>`).join('');
-  let body = `<div class="newtab-note">演示：新标签页打开 · 复用 20.1 资金管理指标平台形式 · 携带当前筛选上下文与角色（RLS）· 页面筛选器仅保留业务线和客户集团</div>`;
+  let body = `<div class="newtab-note">演示：新标签页打开 · 复用 20.1 资金管理指标平台形式 · 携带当前筛选上下文与角色（RLS）· 页面筛选器仅保留业务线和客户集团（客户集团支持多选与搜索）</div>`;
   // 页头（复用 20.1 topbar：标题 + 数据截至）
   body += `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:2px solid #dce2ea;padding-bottom:10px;margin-bottom:12px">
     <div><div style="font-size:18px;font-weight:700">${odMode==='ar'?'逾期应收':odMode==='ub'?'超期未开票':'逾期应收与超期未开票'}</div>
@@ -1636,8 +1645,15 @@ function openOverdueDetail(mode){
     <div style="text-align:right;white-space:nowrap"><div style="font-size:12px;font-weight:600">数据截至</div><div class="muted" style="font-size:12px">${yy}-${String(mm).padStart(2,'0')} · 快照随总筛选器时间上下文（当前月最新快照 / 历史月 FIS 冻结快照）</div></div></div>`;
   // 筛选器区（复用 20.1 filters：仅保留业务线 + 客户集团 + 重置筛选）
   body += `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;background:#f7f9fb;border:1px solid #e3e8ef;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12.5px">
-    <label>业务线 <select class="mini-select" onchange="odFilter.line=this.value;odFilter.cust='ALL';openOverdueDetail(odMode)"><option value="ALL">全部业务线</option>${lineOpts.map(l=>`<option value="${l}" ${odFilter.line===l?'selected':''}>${l==='OS'?'Oversea':l}</option>`).join('')}</select></label>
-    <label>客户集团 <select class="mini-select" onchange="odFilter.cust=this.value;openOverdueDetail(odMode)"><option value="ALL">全部客户集团</option>${custNames.map(n=>`<option value="${n}" ${odFilter.cust===n?'selected':''}>${n}</option>`).join('')}</select></label>
+    <label>业务线 <select class="mini-select" onchange="odFilter.line=this.value;odFilter.custs=[];odFilter.custOpen=false;odFilter.custQ='';openOverdueDetail(odMode)"><option value="ALL">全部业务线</option>${lineOpts.map(l=>`<option value="${l}" ${odFilter.line===l?'selected':''}>${l==='OS'?'Oversea':l}</option>`).join('')}</select></label>
+    <label>客户集团 <span class="multi-select" style="display:inline-block;vertical-align:middle">
+      <button type="button" class="multi-trigger" onclick="odCustToggle(event)">${odFilter.custs.length?('已选 '+odFilter.custs.length+' 项'):'全部客户集团'} ▾</button>
+      <div class="multi-panel" ${odFilter.custOpen?'':'hidden'}>
+        <input type="search" class="multi-search" placeholder="搜索客户集团" value="${odFilter.custQ}" oninput="odCustSearch(this.value)">
+        <div class="multi-actions"><button type="button" onclick="odCustAll()">全选</button><button type="button" onclick="odCustClear()">清空</button></div>
+        <div class="multi-list" id="od-cust-list">${custNames.map(n=>`<label class="multi-option"><input type="checkbox" ${odFilter.custs.includes(n)?'checked':''} onchange="odCustChange('${n}',this.checked)"> <span>${n}</span></label>`).join('')}</div>
+      </div>
+    </span><span class="muted" style="margin-left:6px">可多选、可搜索</span></label>
     <button class="mini-select" style="cursor:pointer" onclick="odReset()">重置筛选</button>
     <span class="muted">受驾驶舱总筛选器与角色（RLS）影响</span></div>`;
   // 指标卡区（复用 20.1 kpis：组合 + 逾期应收 + 超期未开票）
