@@ -638,13 +638,13 @@ function renderKPIs(){
   if(state.page==='cc'){
     const ccBiz=[{key:'offerAmt',label:'Offer金额'},{key:'offerCount',label:'人均月均Offer数',num:1,unit:'个'},{key:'offerAvg',label:'Offer均价'},{key:'offerPerHC',label:'人均Offer金额'}];
     const ccConv=[{key:'reportCount',label:'报告数',num:1},{key:'interviewCount',label:'一面数',num:1},{key:'reportToInterview',label:'报告→一面转化率',pct:1},{key:'interviewToOffer',label:'一面→Offer转化率',pct:1},{key:'reportPerInterview',label:'报告/一面比',ratio:1},{key:'interviewPerOffer',label:'一面/Offer比',ratio:1}];
-    const coreCards=cards.filter(c=>c.key!=='overdue').map(c=>{if(c.key==='hc')return{...c,label:'前后台HC'};if(c.key==='cph')return{...c,label:'综合人效'};return c;}).concat([{key:'overdue',label:'逾期金额',more:'overdue'}]);
+    const coreCards=cards.filter(c=>c.key!=='overdue').map(c=>{if(c.key==='hc')return{...c,label:'前后台HC'};if(c.key==='cph')return{...c,label:'综合人效'};return c;}).concat([{key:'overdue',label:'逾期金额',more:'overdueAmt'}]);
     const row1=coreCards.slice(0,5), row2=coreCards.slice(5), N=5, cols=`grid-template-columns:repeat(${N},1fr)`;
     const ccNote = selectedPeriods().includes(idxOf(2026,8)) ? '<span class="kpi-biz-note">当月数据截止至T-1天</span>' : '';
     html=`<div class="kpi-grid" style="${cols}">${row1.map(cardHtml).join('')}</div><div class="kpi-grid" style="${cols};margin-top:10px">${row2.map(cardHtml).join('')}</div><div class="kpi-biz-title">业务线指标（CC）${ccNote}</div><div class="kpi-grid" style="${cols}">${ccBiz.map(cardHtml).join('')}</div><div class="kpi-biz-title">转化指标（CC）${ccNote}</div>${ccFunnelHtml(a,y,m)}`;
   } else if(state.page==='rpo'){
     const rpoBiz=[{key:'fixedRev',label:'固定收费收入'},{key:'varRev',label:'变动收费收入'},{key:'monthlyOnsite',label:'月均onsite',num:1,unit:'人'}];
-    const coreCards=cards.filter(c=>c.key!=='overdue').map(c=>{if(c.key==='hc')return{...c,label:'前后台HC'};if(c.key==='cph')return{...c,label:'综合人效'};return c;}).concat([{key:'overdue',label:'逾期金额',more:'overdue'}]);
+    const coreCards=cards.filter(c=>c.key!=='overdue').map(c=>{if(c.key==='hc')return{...c,label:'前后台HC'};if(c.key==='cph')return{...c,label:'综合人效'};return c;}).concat([{key:'overdue',label:'逾期金额',more:'overdueAmt'}]);
     const row1=coreCards.slice(0,5), row2=coreCards.slice(5), N=5, cols=`grid-template-columns:repeat(${N},1fr)`;
     html=`<div class="kpi-grid" style="${cols}">${row1.map(cardHtml).join('')}</div><div class="kpi-grid" style="${cols};margin-top:10px">${row2.map(cardHtml).join('')}</div><div class="kpi-biz-title">业务线指标（RPO）</div><div class="kpi-grid" style="${cols}">${rpoBiz.map(cardHtml).join('')}</div>`;
   } else if(isStf){
@@ -1539,6 +1539,9 @@ function openHcDetail(){
   openModal(isCr?'前台HC明细':'前台HC 明细（自有人员）',html,`共 ${count} 名员工 · Demo 数据为程序生成，仅演示交互 · 点击卡片 More 按钮触发${isCr?' · 后台HC按 workforce 折算，不做展示':''}`);
 }
 let odGrp = {line:false,team:false,sub:false};
+let odFilter = {line:'ALL',cust:'ALL'};
+let odMode = '';
+function odReset(){ odFilter = {line:'ALL',cust:'ALL'}; openOverdueDetail(odMode); }
 function odCustOrg(c){
   const lid = HIER[c.line]?c.line:'STF';
   const teams = HIER[lid].bus.flatMap(b=>b.teams);
@@ -1547,14 +1550,25 @@ function odCustOrg(c){
   return {line:(c.line==='OS'?'Oversea':c.line), team:team.name, sub:team.subs[(h>>>3)%team.subs.length]};
 }
 function openOverdueDetail(mode){
-  // mode: undefined=总看板全部模块 | 'ar'=逾期金额（逾期应收+逾期应收明细） | 'ub'=未开票金额（超期未开票+明细）
-  const showAr = mode!=='ub', showUb = mode!=='ar';
+  odMode = mode||'';
+  // odMode: ''=总看板全部模块 | 'ar'=逾期金额（仅逾期应收模块） | 'ub'=未开票金额（仅超期未开票模块）
+  const showAr = odMode!=='ub', showUb = odMode!=='ar';
+  // 看板业务线范围（受角色 RLS 与总筛选器影响）
   let cs;
   if(state.page==='stf') cs = customerData().filter(c=>c.line==='STF');
   else if(state.page==='cc') cs = customerData().filter(c=>c.line==='CC');
   else if(state.page==='rpo') cs = customerData().filter(c=>c.line==='RPO');
   else cs = customerData();
   cs = cs.filter(c=>selected('custGroup',c.name));
+  // 页面筛选器：仅业务线 + 客户集团（业务线选项受看板业务线范围限定）
+  let lineOpts;
+  if(state.page==='stf') lineOpts = ['STF'];
+  else if(state.page==='cc') lineOpts = ['CC'];
+  else if(state.page==='rpo') lineOpts = ['RPO'];
+  else lineOpts = [...new Set(cs.map(c=>c.line))];
+  if(odFilter.line!=='ALL' && lineOpts.includes(odFilter.line)) cs = cs.filter(c=>c.line===odFilter.line);
+  const custNames = [...new Set(cs.map(c=>c.name))].sort((a,b)=>a.localeCompare(b,'zh'));
+  if(odFilter.cust!=='ALL' && custNames.includes(odFilter.cust)) cs = cs.filter(c=>c.name===odFilter.cust);
   const i = curIdx(), mm = i%12+1, yy = 2024+Math.floor(i/12);
   const fut = n => { const t=mm+n, mo=((t-1)%12+1), y2=yy+Math.floor((t-1)/12); return y2+'-'+String(mo).padStart(2,'0'); };
   const odTable = (kind) => {
@@ -1611,29 +1625,44 @@ function openOverdueDetail(mode){
   };
   const sumAr = cs.reduce((s,c)=>s+c.nfi*0.25*(0.5+(hash(c.name+'ar')%10)/10),0);
   const sumUb = cs.reduce((s,c)=>s+c.nfi*0.15*(0.5+(hash(c.name+'ub')%10)/10),0);
-  const card = (label,val,sub) => `<div style="flex:1;min-width:180px;background:#f7f9fb;border:1px solid #e3e8ef;border-radius:8px;padding:12px 14px"><div class="muted" style="font-size:12px">${label}</div><div style="font-size:20px;font-weight:700;margin:4px 0">${fmtMoney(val)} <span class="muted" style="font-size:12px;font-weight:400">${unitLabel()}</span></div><div class="muted" style="font-size:11px">${sub||''}</div></div>`;
+  const card = (label,val,sub,hl) => `<div style="flex:1;min-width:180px;background:#f7f9fb;border:1px solid #e3e8ef;border-radius:8px;padding:12px 14px${hl?';box-shadow:inset 3px 0 0 #4a7db5':''}"><div class="muted" style="font-size:12px">${label}</div><div style="font-size:20px;font-weight:700;margin:4px 0">${fmtMoney(val)} <span class="muted" style="font-size:12px;font-weight:400">${unitLabel()}</span></div><div class="muted" style="font-size:11px">${sub||''}</div></div>`;
   const grpChips = [['line','业务线'],['team','Team'],['sub','Subteam']].map(([k,v])=>
-    `<label style="margin-right:12px;cursor:pointer"><input type="checkbox" ${odGrp[k]?'checked':''} onchange="odGrp.${k}=this.checked;openOverdueDetail('${mode||''}')"> ${v}</label>`).join('');
+    `<label style="margin-right:12px;cursor:pointer"><input type="checkbox" ${odGrp[k]?'checked':''} onchange="odGrp.${k}=this.checked;openOverdueDetail(odMode)"> ${v}</label>`).join('');
   let body = `<div class="newtab-note">演示：新标签页打开 · 复用 20.1 资金管理指标平台形式 · 携带当前筛选上下文与角色（RLS）· 页面筛选器仅保留业务线和客户集团</div>`;
+  // 页头（复用 20.1 topbar：标题 + 数据截至）
+  body += `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:2px solid #dce2ea;padding-bottom:10px;margin-bottom:12px">
+    <div><div style="font-size:18px;font-weight:700">${odMode==='ar'?'逾期应收':odMode==='ub'?'超期未开票':'逾期应收与超期未开票'}</div>
+    <div class="muted" style="font-size:12px;margin-top:2px">两张事实表独立汇总，按统一组织及客户维度联动筛选</div></div>
+    <div style="text-align:right;white-space:nowrap"><div style="font-size:12px;font-weight:600">数据截至</div><div class="muted" style="font-size:12px">${yy}-${String(mm).padStart(2,'0')} · 快照随总筛选器时间上下文（当前月最新快照 / 历史月 FIS 冻结快照）</div></div></div>`;
+  // 筛选器区（复用 20.1 filters：仅保留业务线 + 客户集团 + 重置筛选）
+  body += `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;background:#f7f9fb;border:1px solid #e3e8ef;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12.5px">
+    <label>业务线 <select class="mini-select" onchange="odFilter.line=this.value;odFilter.cust='ALL';openOverdueDetail(odMode)"><option value="ALL">全部业务线</option>${lineOpts.map(l=>`<option value="${l}" ${odFilter.line===l?'selected':''}>${l==='OS'?'Oversea':l}</option>`).join('')}</select></label>
+    <label>客户集团 <select class="mini-select" onchange="odFilter.cust=this.value;openOverdueDetail(odMode)"><option value="ALL">全部客户集团</option>${custNames.map(n=>`<option value="${n}" ${odFilter.cust===n?'selected':''}>${n}</option>`).join('')}</select></label>
+    <button class="mini-select" style="cursor:pointer" onclick="odReset()">重置筛选</button>
+    <span class="muted">受驾驶舱总筛选器与角色（RLS）影响</span></div>`;
+  // 指标卡区（复用 20.1 kpis：组合 + 逾期应收 + 超期未开票）
   body += `<div style="margin:8px 0 12px;display:flex;gap:10px;flex-wrap:wrap">`;
-  if(mode==='ub') body += card('超期未开票金额（R08-2）', sumUb, '已发薪未开票事实表 · 逾期开票=是');
-  else if(mode==='ar') body += card('逾期应收金额（R08-1）', sumAr, '应收事实表 · 逾期状态=已逾期');
-  else body += card('逾期应收金额 + 超期未开票金额（R08）', sumAr+sumUb, '组合指标：仅在指标层相加，不关联明细');
+  if(!odMode) body += card('逾期应收 + 超期未开票（R08）', sumAr+sumUb, '组合指标：逾期应收金额 + 超期未开票金额，仅在指标层相加，不关联明细', true);
+  if(showAr) body += card('逾期应收（R08-1）', sumAr, `涉及 ${cs.length} 个客户集团 · 应收事实表 · 逾期状态 = 已逾期`);
+  if(showUb) body += card('超期未开票（R08-2）', sumUb, `涉及 ${cs.length} 个客户集团 · 已发薪未开票事实表 · 逾期开票 = 是`);
   body += `</div>`;
-  body += `<div style="margin-bottom:10px;font-size:12.5px">分组维度（逾期应收与超期未开票共用，可多选至三层，也可不选——不选时默认按 客户集团 / ${showAr?'预计收款月份':'发薪月份'} 打开）：${grpChips}</div>`;
+  const dimHint = showAr&&showUb ? '预计收款月份（逾期应收）/ 发薪月份（超期未开票）' : (showAr?'预计收款月份':'发薪月份');
+  body += `<div style="margin-bottom:10px;font-size:12.5px">分组维度（两张明细表共用，可多选至三层，也可不选——不选时默认按 客户集团 / ${dimHint} 打开）：${grpChips}</div>`;
   if(showAr){
-    body += `<div style="font-weight:600;font-size:13px;margin:6px 0">逾期应收 · 按${odGrp.line||odGrp.team||odGrp.sub?'分组维度 + ':''}客户集团展开至预计收款月份</div>`;
     const t = odTable('ar');
-    body += '<table><thead><tr><th>客户集团 / 预计收款月份</th><th>截至目前应收</th><th>逾期金额</th><th>逾期金额占比</th><th>平均逾期天数</th><th>平均账期</th></tr></thead><tbody>'+t.body+'</tbody><tfoot>'+t.foot+'</tfoot></table>';
+    body += `<div style="border:1px solid #e3e8ef;border-radius:8px;padding:10px 12px;margin-bottom:14px"><div style="font-weight:700;font-size:14px;margin-bottom:6px">逾期应收<span class="muted" style="font-weight:400;font-size:12px;margin-left:8px">按${odGrp.line||odGrp.team||odGrp.sub?'分组维度 + ':''}客户集团展开至预计收款月份</span></div>`+
+      '<table><thead><tr><th>客户集团 / 预计收款月份</th><th>截至目前应收</th><th>逾期金额</th><th>逾期金额占比</th><th>平均逾期天数</th><th>平均账期</th></tr></thead><tbody>'+t.body+'</tbody><tfoot>'+t.foot+'</tfoot></table></div>';
   }
   if(showUb){
-    body += `<div style="font-weight:600;font-size:13px;margin:14px 0 6px">超期未开票 · 按${odGrp.line||odGrp.team||odGrp.sub?'分组维度 + ':''}客户集团展开至发薪月份</div>`;
     const t = odTable('ub');
-    body += '<table><thead><tr><th>客户集团 / 发薪月份</th><th>超期未开票金额</th><th>超期未开票金额占比</th><th>平均超期天数</th></tr></thead><tbody>'+t.body+'</tbody><tfoot>'+t.foot+'</tfoot></table>';
+    body += `<div style="border:1px solid #e3e8ef;border-radius:8px;padding:10px 12px;margin-bottom:14px"><div style="font-weight:700;font-size:14px;margin-bottom:6px">超期未开票<span class="muted" style="font-weight:400;font-size:12px;margin-left:8px">按${odGrp.line||odGrp.team||odGrp.sub?'分组维度 + ':''}客户集团展开至发薪月份</span></div>`+
+      '<table><thead><tr><th>客户集团 / 发薪月份</th><th>超期未开票金额</th><th>超期未开票金额占比</th><th>平均超期天数</th></tr></thead><tbody>'+t.body+'</tbody><tfoot>'+t.foot+'</tfoot></table></div>';
   }
-  const t = state.page==='stf'?(mode==='ar'?'STF 看板「逾期金额」More：仅展示逾期应收与逾期应收明细模块。':mode==='ub'?'STF 看板「未开票金额」More：仅展示超期未开票与超期未开票明细模块。':''):'';
-  const foot = `${t}两张事实表独立汇总、不做逐行拼接；占比按客户集团汇总行计算（分母为当前筛选上下文金额总计，保留两位小数，月份行展示 —，单一集团时为 100.00%）；总计行金额求和、平均类按当前表内明细重新计算；集团层按金额降序、月份从近到远 · 快照随总筛选器时间上下文（当前月最新快照 / 历史月 FIS 冻结快照）· Demo 模拟数据`;
-  openModal(mode==='ar'?'逾期金额（逾期应收）明细':mode==='ub'?'未开票金额（超期未开票）明细':'逾期 & 未开票 · 资金明细页（复用 20.1 资金管理指标平台）',body,foot);
+  // 口径说明（复用 20.1 spec 折叠区）
+  body += `<details style="margin-top:2px"><summary style="cursor:pointer;font-size:12.5px;font-weight:600">平台开发口径（复用 20.1，详见专项开发规格 R08 V1.0）</summary><div class="muted" style="font-size:12px;line-height:1.9;padding:6px 12px">逾期应收 = 应收事实表[未收金额]，过滤“逾期状态 = 已逾期”；逾期金额占比 = 客户集团逾期金额 ÷ 当前筛选条件下逾期金额总计。<br>超期未开票 = 已发薪未开票事实表[通知单员工总额]，过滤“是否逾期开票 = 是”；超期未开票金额占比 = 客户集团超期未开票金额 ÷ 当前筛选条件下超期未开票金额总计。<br>组合指标 = 逾期应收 + 超期未开票，只在指标层相加、不关联明细；两张事实表分别聚合、互不拼接，筛选条件分别下推至对应事实表；正式平台默认最新快照并支持切换历史快照日期，每次查询限定单个快照日期。</div></details>`;
+  const t2 = state.page!=='main'?(odMode==='ar'?'业务线看板「逾期金额」More：仅展示逾期应收指标卡与逾期应收明细表模块。':odMode==='ub'?'业务线看板「未开票金额」More：仅展示超期未开票指标卡与超期未开票明细表模块。':''):'';
+  const foot = `${t2}两张事实表独立汇总、不做逐行拼接；占比按客户集团汇总行计算（分母为当前筛选上下文金额总计，保留两位小数，月份行展示 —，单一集团时为 100.00%）；总计行金额求和、平均类按当前表内明细重新计算；集团层按金额降序、月份从近到远 · Demo 模拟数据`;
+  openModal(odMode===''?'逾期 & 未开票 · 资金明细页（复用 20.1 资金管理指标平台）':odMode==='ar'?'逾期金额 More · 逾期应收':'未开票金额 More · 超期未开票',body,foot);
 }
 let netAddOrg = 'ALL';
 function openNetAddDetail(){
