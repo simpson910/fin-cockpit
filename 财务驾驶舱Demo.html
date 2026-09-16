@@ -1536,7 +1536,7 @@ function openHcDetail(){
     }
   }
   html += '</tbody></table>';
-  openModal(isCr?'前后台HC 明细':'前台HC 明细（自有人员）',html,`共 ${count} 名员工 · Demo 数据为程序生成，仅演示交互 · 点击卡片 More 按钮触发${isCr?' · 后台HC按 workforce 折算，不做展示':''}`);
+  openModal(isCr?'前台HC明细':'前台HC 明细（自有人员）',html,`共 ${count} 名员工 · Demo 数据为程序生成，仅演示交互 · 点击卡片 More 按钮触发${isCr?' · 后台HC按 workforce 折算，不做展示':''}`);
 }
 let odGrp = {line:false,team:false,sub:false};
 function odCustOrg(c){
@@ -1736,8 +1736,12 @@ function openLossDetail(){
     for(const c of custs) body += `<tr><td>${c.k}</td>${cells(c)}</tr>`;
     if(!custs.length) body += '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">无总损耗≠0 的数据</td></tr>';
   }
+  if(groups.length){
+    const tot = groups.reduce((a,g)=>({nfi:a.nfi+g.nfi,loss:a.loss+g.loss,lz:a.lz+g.lz,sq:a.sq+g.sq,sb:a.sb+g.sb,gs:a.gs+g.gs,dg:a.dg+g.dg}),{nfi:0,loss:0,lz:0,sq:0,sb:0,gs:0,dg:0});
+    body += `<tr class="summary-row"><td>总计</td>${cells(tot)}</tr>`;
+  }
   body += '</tbody></table>';
-  openModal('总损耗明细',body,'字段：总损耗NFI占比（总损耗/NFI）/ 客户集团 / 总损耗 / 科锐承担离职补 / 三期成本 / 社保补缴金额 / 工伤成本 / 待岗成本 · 下钻维度默认客户集团，Team/Subteam/时间维度可多选，选中后第一层按所选维度聚合、下钻至客户集团 · Demo 模拟数据');
+  openModal('总损耗明细',body,'字段：总损耗NFI占比（总损耗/NFI）/ 客户集团 / 总损耗 / 科锐承担离职补 / 三期成本 / 社保补缴金额 / 工伤成本 / 待岗成本 · 下钻维度默认客户集团，Team/Subteam/时间维度可多选，选中后第一层按所选维度聚合、下钻至客户集团 · 最下方总计行（金额类求和，总损耗NFI占比 = 总损耗合计 / NFI 合计）· Demo 模拟数据');
 }
 let custTopLevel = 'none';
 function openCustomerDetail(){
