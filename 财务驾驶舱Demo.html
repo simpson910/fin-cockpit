@@ -445,6 +445,7 @@ function fmtPct(v){return (v*100).toFixed(1)+'%';}
 function fmtPp(v){return (v>=0?'+':'')+(v*100).toFixed(1)+'pp';}
 function fmtYoY(v){return (v>=0?'+':'')+(v*100).toFixed(1)+'%';}
 function cls(v){return v>=0?'up':'down';}
+function triPct(v){return `<span class="${cls(v)}">${v>=0?'▲':'▼'} ${Math.abs(v*100).toFixed(1)}%</span>`;}
 function yoySpan(v,extra){return `<span class="${cls(v)}">${fmtYoY(v)}${extra||''}</span>`;}
 function yoyChip(v,pp){const arrow=v>=0?'▲':'▼';return `<span class="chip-row"><span class="chip ${cls(v)}">${arrow} ${pp?fmtPp(v):fmtYoY(v)}</span></span>`;}
 
@@ -559,7 +560,7 @@ function refreshCustFilter(){
 
 /* ================= 模块A KPI ================= */
 function moreAction(m){
-  return m==='hc'?'openHcDetail()':m==='overdue'?'openOverdueDetail()':m==='netAdd'?'openNetAddDetail()':m==='loss'?'openLossDetail()':'';
+  return m==='hc'?'openHcDetail()':m==='overdue'?'openOverdueDetail()':m==='overdueAmt'?"openOverdueDetail('ar')":m==='unbilled'?"openOverdueDetail('ub')":m==='netAdd'?'openNetAddDetail()':m==='loss'?'openLossDetail()':'';
 }
 function fmtDiff(c,d){
   const sign = d>=0?'+':'';
@@ -582,8 +583,8 @@ function renderKPIs(){
     cards.push(
       {key:'hc',label:'前台HC',num:1,more:'hc'},
       {key:'cph',label:'前台人效'},
-      {key:'overdueAmt',label:'逾期金额',more:'overdue'},
-      {key:'unbilled',label:'未开票金额',more:'overdue'}
+      {key:'overdueAmt',label:'逾期金额',more:'overdueAmt'},
+      {key:'unbilled',label:'未开票金额',more:'unbilled'}
     );
   } else {
     cards.push(
@@ -930,7 +931,7 @@ function renderRpoMatrix(){
   let head='<th>组织（点击下钻）</th>';
   if(core) head+='<th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th>'+ (isBu?'<th>NPAT% 二次亏损后</th>':'') +'<th>前后台HC</th><th>综合人效</th><th>逾期金额</th>';
   else head+='<th>固定收费收入</th><th>变动收费收入</th><th>月均onsite</th>';
-  head+='<th>状态</th>';
+  if(core) head+='<th>状态</th>';
   const metricKeys=core
     ? ['rev','nfi','nfiRate','budgetPct','npatPct',...(isBu?['npatPost']:[]),'hc','cph','overdue']
     : RPO_METRICS;
@@ -950,7 +951,7 @@ function renderRpoMatrix(){
     const w=b.w, n=nodeMetrics(id,i,w), mark=expanded.has(id+'|'+b.name)?'▾ ':'▸ ';
     let h='<tr class="row-expand" onclick="toggleNode(\''+id+'|'+b.name+'\')" style="cursor:pointer"><td style="padding-left:'+(10+indent*18)+'px">'+mark+b.name+'</td>';
     h+=rpoCells(n,w);
-    return h+'<td><span class="light '+lightOf(n.budgetPct,n.rateY)+'"></span></td></tr>';
+    return h+(core?`<td><span class="light ${lightOf(n.budgetPct,n.rateY)}"></span></td>`:'')+'</tr>';
   };
   let body='';
   for(const b of hier.bus){
@@ -960,13 +961,13 @@ function renderRpoMatrix(){
         const tn=nodeMetrics('RPO',i,b.w*t.w);
         body+='<tr class="row-expand" onclick="toggleNode(\'RPO|'+b.name+'|'+t.name+'\')" style="cursor:pointer"><td style="padding-left:28px">'+(expanded.has('RPO|'+b.name+'|'+t.name)?'▾ ':'▸ ')+t.name+'</td>';
         body+=rpoCells(tn,b.w*t.w);
-        body+='<td><span class="light '+lightOf(tn.budgetPct,tn.rateY)+'"></span></td></tr>';
+        body+=(core?`<td><span class="light ${lightOf(tn.budgetPct,tn.rateY)}"></span></td>`:'')+'</tr>';
         if(expanded.has('RPO|'+b.name+'|'+t.name)){
           for(const s of t.subs){
             const sn=nodeMetrics('RPO',i,b.w*t.w/t.subs.length);
             body+='<tr><td style="padding-left:46px">'+s+'</td>';
             body+=rpoCells(sn,b.w*t.w/t.subs.length);
-            body+='<td><span class="light '+lightOf(sn.budgetPct,sn.rateY)+'"></span></td></tr>';
+            body+=(core?`<td><span class="light ${lightOf(sn.budgetPct,sn.rateY)}"></span></td>`:'')+'</tr>';
           }
         }
       }
@@ -975,7 +976,7 @@ function renderRpoMatrix(){
   if(hier.bus.length>1){
     const n=sumMatrixNodes(hier.bus.map(b=>nodeMetrics('RPO',i,b.w)));
     const prev=i>=12?sumMatrixNodes(hier.bus.map(b=>nodeMetrics('RPO',i-12,b.w))):null;
-    body+='<tr class="summary-row"><td>总计</td>'+rpoCells(n,1,prev)+'<td><span class="light '+lightOf(n.budgetPct,n.rateY)+'"></span></td></tr>';
+    body+='<tr class="summary-row"><td>总计</td>'+rpoCells(n,1,prev)+(core?`<td><span class="light ${lightOf(n.budgetPct,n.rateY)}"></span></td>`:'')+'</tr>';
   }
   document.getElementById('matrix').innerHTML='<thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody>';
   renderRpoKaTable();
@@ -1089,13 +1090,13 @@ function renderCcMatrix(){
   if(core) head+='<th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th><th>前后台HC</th><th>综合人效</th><th>逾期金额</th>';
   if(biz) head+='<th>Offer金额</th><th>人均月均Offer数</th><th>Offer均价</th><th>人均Offer金额</th>';
   if(conv) head+='<th>报告数</th><th>一面数</th><th>报告→一面</th><th>一面→Offer</th><th>报告/一面比</th><th>一面/Offer比</th>';
-  head+='<th>状态</th>';
+  if(core) head+='<th>状态</th>';
   const scaled=(src,m)=>Object.assign({},src,{_previous:nodeMetrics('CC',i-12,m),rev:src.rev*m,nfi:src.nfi*m,hc:src.hc*m,overdue:src.overdue*m,offerAmt:src.offerAmt*m,offerCount:src.offerCount*m,offerAvg:src.offerAvg,offerPerHC:src.offerPerHC,reportCount:src.reportCount*m,interviewCount:src.interviewCount*m});
   const row=(name,area,mult,totalNode)=>{const nm=totalNode||scaled(n,mult);let h=`<tr>${hasReg?`<td>${area}</td>`:''}<td>${name}</td>`;
     if(core) h+=`<td>${fmtMoney(nm.rev)}${yoyChip(n.revY)}</td><td>${fmtMoney(nm.nfi)}${yoyChip(n.nfiY)}</td><td>${fmtPct(n.nfiRate)}${yoyChip(n.rateY,1)}</td><td>${budgetBar(n.budgetPct)}</td><td>${fmtPct(n.npatPct)}${yoyChip(n.npatY,1)}</td><td>${Math.round(nm.hc)}${yoyChip(n.hcY)}</td><td>${fmtMoney2(nm.cph)}${yoyChip(n.cphY)}</td><td>${fmtMoney(nm.overdue)}${yoyChip(n.odY)}</td>`;
     if(biz) for(const k of ['offerAmt','offerCount','offerAvg','offerPerHC']) h+=`<td>${ccMatrixCell(nm,k)}</td>`;
     if(conv) for(const k of ['reportCount','interviewCount','reportToInterview','interviewToOffer','reportPerInterview','interviewPerOffer']) h+=`<td>${ccMatrixCell(nm,k)}</td>`;
-    return h+'<td><span class="light '+lightOf(n.budgetPct,n.rateY)+'"></span></td></tr>';};
+    return h+(core?`<td><span class="light ${lightOf(n.budgetPct,n.rateY)}"></span></td>`:'')+'</tr>';};
   let body;
   if(hasReg){
     body=regions.map(r=>scopedHierarchy('CC').bus.map(b=>row(b.name,r,b.w*(CC_REGION_W[r]||0.5))).join('')).join('');
@@ -1152,8 +1153,8 @@ function stfMatrixRow(name,node,indent,onclick,mark){
     ${biz?`<td>${Math.round(node.odHC).toLocaleString()}${yoyChip(node.odHCY)}</td>`:''}
     ${biz?`<td>${(node.netAdd>=0?'+':'')+Math.round(node.netAdd).toLocaleString()}${yoyChip(node.netAddY)}</td>`:''}
     ${biz?`<td>${fmtMoney2(node.loss)}${yoyChip(node.lossY)}</td>`:''}
-    ${biz?`<td>${fmtPct(node.lossRate)}${yoyChip(node.lossRateY,1)}</td>`:''}
-    <td><span class="light ${lightOf(node.budgetPct,node.rateY)}"></span></td>
+  ${biz?`<td>${fmtPct(node.lossRate)}${yoyChip(node.lossRateY,1)}</td>`:''}
+  ${core?`<td><span class="light ${lightOf(node.budgetPct,node.rateY)}"></span></td>`:''}
   </tr>`;
 }
 function renderStfMatrix(){
@@ -1167,7 +1168,7 @@ function renderStfMatrix(){
   } else {
     heads += '<th>外包时点在职</th><th>外包日均在职</th><th>外包净增</th><th>总损耗</th><th>总损耗NFI占比</th>';
   }
-  heads += '<th>状态</th>';
+  if(view==='core') heads += '<th>状态</th>';
   let html = `<thead><tr>${heads}</tr></thead><tbody>`;
   const roots=[];
   for(const id of pageLines()){
@@ -1509,7 +1510,9 @@ const EGIV = ['Alex','Bella','Chris','Diana','Eric','Fiona','Gary','Helen','Ivan
 let empSeq = 1000;
 function openHcDetail(){
   const lines = pageLines();
+  const isCr = state.page==='cc'||state.page==='rpo';
   let html = '<div class="newtab-note">演示：新标签页打开 · 钻取页（Drill-through）· 携带当前筛选上下文 · 受 RLS 权限控制</div>';
+  if(isCr) html += '<div style="background:#fdf6ec;border:1px solid #f0dcc0;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:12.5px;color:#8a6d3b">注：后台HC按 workforce 折算，不做展示。</div>';
   html += `<div class="muted" style="margin-bottom:8px">聚合维度：月份 / Bu / Team / Subteam / 雇佣类型（分组展示），明细行：员工编号 / 中文姓名 / 英文姓名 / HC</div>`;
   html += '<table><thead><tr><th>员工编号</th><th>中文姓名</th><th>英文姓名</th><th>HC</th></tr></thead><tbody>';
   let count = 0;
@@ -1533,32 +1536,113 @@ function openHcDetail(){
     }
   }
   html += '</tbody></table>';
-  openModal('前台HC 明细（自有人员）',html,`共 ${count} 名员工 · Demo 数据为程序生成，仅演示交互 · 点击卡片 More 按钮触发`);
+  openModal(isCr?'前后台HC 明细':'前台HC 明细（自有人员）',html,`共 ${count} 名员工 · Demo 数据为程序生成，仅演示交互 · 点击卡片 More 按钮触发${isCr?' · 后台HC按 workforce 折算，不做展示':''}`);
 }
-function openOverdueDetail(){
-  const t = state.page==='stf'?'STF看板中「逾期金额」「未开票金额」为两个独立指标，分别提供 More 跳转。':'';
-  const body = `<div class="newtab-note">演示：新标签页打开 · 携带当前筛选上下文 · 受 RLS 权限控制</div>
-  <div class="risk-card warn"><h4>🟡 展示字段待定</h4>
-  <div class="r-line">逾期金额 / 未开票金额明细跳转页<b>展示字段待定</b>（见开发文档第 8 章待确认事项5）。${t}</div>
-  <div class="r-line">字段确认后本页将展示明细（预计包含：月份 / Bu / Team / Subteam / 客户集团 / 逾期金额 / 未开票金额（含未关联）等，以业务方确认为准）。</div></div>`;
-  openModal('逾期 / 未开票 明细',body,'Demo 占位页 —— 待字段确认后补充实现');
+let odGrp = {line:false,team:false,sub:false};
+function odCustOrg(c){
+  const lid = HIER[c.line]?c.line:'STF';
+  const teams = HIER[lid].bus.flatMap(b=>b.teams);
+  const h = hash(c.name);
+  const team = teams[h%teams.length];
+  return {line:(c.line==='OS'?'Oversea':c.line), team:team.name, sub:team.subs[(h>>>3)%team.subs.length]};
 }
-function openNetAddDetail(){
-  const i = curIdx();
-  let rows = '';
-  for(const idx of selectedPeriods()){
-    if(idx<1) continue;
-    const cur = monthAggAt(idx), prev = monthAggAt(idx-1);
-    const beg = Math.round(prev.odHC), end = Math.round(cur.odHC);
-    rows += `<tr><td>${2024+Math.floor(idx/12)}-${String(idx%12+1).padStart(2,'0')}</td><td>${beg.toLocaleString('zh-CN')}</td><td>${end.toLocaleString('zh-CN')}</td><td class="${cls(end-beg)}">${(end-beg>=0?'+':'')+(end-beg).toLocaleString('zh-CN')}</td></tr>`;
+function openOverdueDetail(mode){
+  // mode: undefined=总看板全部模块 | 'ar'=逾期金额（逾期应收+逾期应收明细） | 'ub'=未开票金额（超期未开票+明细）
+  const showAr = mode!=='ub', showUb = mode!=='ar';
+  let cs;
+  if(state.page==='stf') cs = customerData().filter(c=>c.line==='STF');
+  else if(state.page==='cc') cs = customerData().filter(c=>c.line==='CC');
+  else if(state.page==='rpo') cs = customerData().filter(c=>c.line==='RPO');
+  else cs = customerData();
+  cs = cs.filter(c=>selected('custGroup',c.name));
+  const i = curIdx(), mm = i%12+1, yy = 2024+Math.floor(i/12);
+  const fut = n => { const t=mm+n, mo=((t-1)%12+1), y2=yy+Math.floor((t-1)/12); return y2+'-'+String(mo).padStart(2,'0'); };
+  const odRows = (kind) => {
+    // kind: 'ar' 逾期应收（预计收款月份）| 'ub' 超期未开票（发薪月份）
+    const groups = {};
+    for(const c of cs){
+      const o = odCustOrg(c);
+      const gk = [odGrp.line?o.line:'', odGrp.team?o.team:'', odGrp.sub?o.sub:''].filter(Boolean).join(' / ');
+      (groups[gk||''] = groups[gk||'']||[]).push({c,o});
+    }
+    let h = '';
+    const months = kind==='ar'?[fut(1),fut(2),fut(3)]:[fut(-2),fut(-1),fut(0)] ;
+    for(const gk in groups){
+      if(gk) h += `<tr style="background:#f0f4f8;font-weight:600"><td colspan="5">${gk}</td></tr>`;
+      for(const {c,o} of groups[gk]){
+        const hh = hash(c.name+kind);
+        const base = c.nfi*(kind==='ar'?0.25:0.15)*(0.5+(hh%10)/10);
+        h += `<tr><td style="padding-left:${gk?26:10}px">${c.name}</td><td>${fmtMoney2(c.nfi*(kind==='ar'?0.45:0.3)*(0.5+(hh%10)/10))}</td><td class="down">${fmtMoney2(base)}</td><td>${20+hh%60} 天</td><td>${30+(hh>>>2)%60} 天</td></tr>`;
+        for(let k=0;k<months.length;k++){
+          const sh = [0.45,0.3,0.25][k];
+          h += `<tr style="color:#7a8699"><td style="padding-left:${gk?42:26}px">${months[k]}</td><td>${fmtMoney2(c.nfi*0.3*sh)}</td><td>${fmtMoney2(base*sh)}</td><td>${20+((hh+k*7)%60)} 天</td><td>${30+((hh+k*5)%60)} 天</td></tr>`;
+        }
+      }
+    }
+    return h || '<tr><td colspan="5" class="muted" style="text-align:center;padding:16px">当前筛选范围无数据</td></tr>';
+  };
+  const sumAr = cs.reduce((s,c)=>s+c.nfi*0.25*(0.5+(hash(c.name+'ar')%10)/10),0);
+  const sumUb = cs.reduce((s,c)=>s+c.nfi*0.15*(0.5+(hash(c.name+'ub')%10)/10),0);
+  const card = (label,val,sub) => `<div style="flex:1;min-width:180px;background:#f7f9fb;border:1px solid #e3e8ef;border-radius:8px;padding:12px 14px"><div class="muted" style="font-size:12px">${label}</div><div style="font-size:20px;font-weight:700;margin:4px 0">${fmtMoney(val)} <span class="muted" style="font-size:12px;font-weight:400">${unitLabel()}</span></div><div class="muted" style="font-size:11px">${sub||''}</div></div>`;
+  const grpChips = [['line','业务线'],['team','Team'],['sub','Subteam']].map(([k,v])=>
+    `<label style="margin-right:12px;cursor:pointer"><input type="checkbox" ${odGrp[k]?'checked':''} onchange="odGrp.${k}=this.checked;openOverdueDetail('${mode||''}')"> ${v}</label>`).join('');
+  let body = `<div class="newtab-note">演示：新标签页打开 · 复用 20.1 资金管理指标平台形式 · 携带当前筛选上下文与角色（RLS）· 页面筛选器仅保留业务线和客户集团</div>`;
+  body += `<div style="margin:8px 0 12px;display:flex;gap:10px;flex-wrap:wrap">`;
+  if(mode==='ub') body += card('超期未开票金额（R08-2）', sumUb, '已发薪未开票事实表 · 逾期开票=是');
+  else if(mode==='ar') body += card('逾期应收金额（R08-1）', sumAr, '应收事实表 · 逾期状态=已逾期');
+  else body += card('逾期应收金额 + 超期未开票金额（R08）', sumAr+sumUb, '组合指标：仅在指标层相加，不关联明细');
+  body += `</div>`;
+  body += `<div style="margin-bottom:10px;font-size:12.5px">分组维度（逾期应收与超期未开票共用，可多选至三层，也可不选——不选时默认按 客户集团 / ${showAr?'预计收款月份':'发薪月份'} 打开）：${grpChips}</div>`;
+  if(showAr){
+    body += `<div style="font-weight:600;font-size:13px;margin:6px 0">逾期应收 · 按${odGrp.line||odGrp.team||odGrp.sub?'分组维度 + ':''}客户集团展开至预计收款月份</div>`;
+    body += '<table><thead><tr><th>客户集团 / 预计收款月份</th><th>截至目前应收</th><th>逾期金额</th><th>平均逾期天数</th><th>平均账期</th></tr></thead><tbody>'+odRows('ar')+'</tbody></table>';
   }
-  const body = `<div class="newtab-note">演示：More 跳转 · 外包净增人数明细 · 携带当前筛选上下文 · 受 RLS 权限控制</div>
-  <div class="risk-card warn"><h4>🟡 实现方式待与产研讨论（见开发文档第 8 章待确认事项6）</h4>
-  <div class="r-line"><b>方式1</b>：跳转 <b>Quick BI · STF 双周会看板</b>（新标签页打开）；</div>
-  <div class="r-line"><b>方式2</b>：从 Quick BI 取部分字段，构建新的详情页。</div></div>
-  <div style="margin:10px 0 6px;font-weight:600;font-size:12.5px">方式2 效果预览（所选月份，模拟）</div>
-  <table><thead><tr><th>月份</th><th>期初外包在职</th><th>期末外包在职</th><th>净增人数</th></tr></thead><tbody>${rows}</tbody></table>`;
-  openModal('外包净增人数 明细',body,'Demo：两种方式待产研评估难易度与可行性后确定');
+  if(showUb){
+    body += `<div style="font-weight:600;font-size:13px;margin:14px 0 6px">超期未开票 · 按${odGrp.line||odGrp.team||odGrp.sub?'分组维度 + ':''}客户集团展开至发薪月份</div>`;
+    body += '<table><thead><tr><th>客户集团 / 发薪月份</th><th>截至目前应收</th><th>超期未开票金额</th><th>平均超期天数</th><th>平均账期</th></tr></thead><tbody>'+odRows('ub')+'</tbody></table>';
+  }
+  const t = state.page==='stf'?(mode==='ar'?'STF 看板「逾期金额」More：仅展示逾期应收与逾期应收明细模块。':mode==='ub'?'STF 看板「未开票金额」More：仅展示超期未开票与超期未开票明细模块。':''):'';
+  const foot = `${t}两张事实表独立汇总、不做逐行拼接；快照随总筛选器时间上下文（当前月最新快照 / 历史月 FIS 冻结快照）· Demo 模拟数据`;
+  openModal(mode==='ar'?'逾期金额（逾期应收）明细':mode==='ub'?'未开票金额（超期未开票）明细':'逾期 & 未开票 · 资金明细页（复用 20.1 资金管理指标平台）',body,foot);
+}
+let netAddOrg = 'ALL';
+function openNetAddDetail(){
+  // R40 More：已确认方式2 —— 自建详情页（字段见开发文档 6.1.2）
+  const teams = HIER.STF.bus.flatMap(b=>b.teams);
+  let cs = customerData().filter(c=>c.line==='STF');
+  const rows = [];
+  const pv = netAddOrg.split('|');
+  for(const c of cs){
+    const h = hash('na'+c.name);
+    const team = teams[h%teams.length], sub = team.subs[(h>>>3)%team.subs.length];
+    const keep = netAddOrg==='ALL' || (pv.length===1 ? team.name===pv[0] : (team.name===pv[0] && sub===pv[1]));
+    if(!keep) continue;
+    const beg = Math.round(60+h%200), hire = Math.round(4+h%18), quit = Math.round(2+h%12);
+    const net = hire-quit;
+    const hireP = Math.round(3+h%15), quitP = Math.round(1+h%10), netP = hireP-quitP;
+    rows.push({c,beg,hire,quit,net,netD:net-netP,hireD:hire-hireP,quitD:quit-quitP,team,sub});
+  }
+  const cnum = v=>`<td>${v.toLocaleString('zh-CN')}</td>`;
+  const cdif = v=>`<td class="${cls(v)}">${(v>=0?'+':'')+v.toLocaleString('zh-CN')}</td>`;
+  let body = '<div class="newtab-note">演示：新标签页打开 · 已确认采用方式2（自建详情页）· 携带当前筛选上下文 · 受 RLS 权限控制</div>';
+  const orgOpt = (val,label) => `<option value="${val}" ${netAddOrg===val?'selected':''}>${label}</option>`;
+  body += `<div style="margin-bottom:10px;font-size:12.5px">Team / Subteam 筛选器：
+    <select class="mini-select" onchange="netAddOrg=this.value;openNetAddDetail()">`+
+    orgOpt('ALL','全部团队')+
+    teams.map(t=>[orgOpt(t.name,t.name)].concat(t.subs.map(s=>orgOpt(t.name+'|'+s,'　└ '+s))).join('')).join('')+
+    `</select> <span class="muted">· 选中 Team 含其全部 Subteam</span></div>`;
+  body += '<table><thead><tr><th>客户集团</th><th>外包时点在职人数</th><th>净增人数</th><th>净增人数同比差</th><th>入职人数</th><th>入职人数同比差</th><th>离职人数</th><th>离职人数同比差</th></tr></thead><tbody>';
+  if(rows.length){
+    const sum = rows.reduce((s,r)=>({beg:s.beg+r.beg,net:s.net+r.net,netD:s.netD+r.netD,hire:s.hire+r.hire,hireD:s.hireD+r.hireD,quit:s.quit+r.quit,quitD:s.quitD+r.quitD}),{beg:0,net:0,netD:0,hire:0,hireD:0,quit:0,quitD:0});
+    for(const r of rows){
+      body += `<tr><td>${r.c.name}</td>${cnum(r.beg)}${cnum(r.net)}${cdif(r.netD)}${cnum(r.hire)}${cdif(r.hireD)}${cnum(r.quit)}${cdif(r.quitD)}</tr>`;
+    }
+    body += `<tr class="summary-row"><td>合计</td>${cnum(sum.beg)}${cnum(sum.net)}${cdif(sum.netD)}${cnum(sum.hire)}${cdif(sum.hireD)}${cnum(sum.quit)}${cdif(sum.quitD)}</tr>`;
+  } else {
+    body += '<tr><td colspan="8" class="muted" style="text-align:center;padding:16px">当前筛选范围无数据</td></tr>';
+  }
+  body += '</tbody></table>';
+  openModal('外包净增人数 明细（方式2 · 自建详情页）',body,'字段：客户集团 / 外包时点在职人数 / 净增人数 / 净增人数同比差 / 入职人数 / 入职人数同比差 / 离职人数 / 离职人数同比差 · 其中入职、离职及三项同比差为清单外新增字段 · Demo 模拟数据');
 }
 let lossDim = 'cust';
 function lossRows(){
@@ -1606,18 +1690,18 @@ function openLossDetail(){
   body += '</tbody></table>';
   openModal('总损耗明细',body,'字段：客户集团 / 总损耗 / 科锐承担离职补 / 三期成本 / 社保补缴金额 / 工伤成本 / 待岗成本 · Demo 模拟数据');
 }
-let custTopLevel = 'post';
+let custTopLevel = 'none';
 function openCustomerDetail(){
-  const dims = {post:'业务线',gNew:'集团新老客标签',lNew:'业务线新老客标签',nature:'客户性质',city:'大口径城市',ka:'KA分类'};
-  let body = '<div class="newtab-note">演示：新标签页打开 · 依托 Customer Report 的 Overall Analysis 页面 · 展示所有客户明细（不限 TOP10）</div>';
-  body += `<div style="margin-bottom:10px">Top Level（第一层聚合维度）：
+  const dims = {none:'不选（客户集团直开）',post:'业务线',gNew:'集团新老客标签',lNew:'业务线新老客标签',nature:'客户性质',city:'大口径城市',ka:'KA分类'};
+  let body = '<div class="newtab-note">演示：新标签页打开 · 依托 Customer Report 的 Overall Analysis 页面 · 展示所有客户明细（不限 TOP10）· 受主筛选器与核心客户影响模块筛选器共同影响</div>';
+  body += `<div style="margin-bottom:10px">Top Level（第一层聚合维度，可不选）：
     <select class="mini-select" onchange="custTopLevel=this.value;openCustomerDetail()">`+
     Object.entries(dims).map(([k,v])=>`<option value="${k}" ${custTopLevel===k?'selected':''}>${v}</option>`).join('')+
-    `</select> <span class="muted">· 点击行展开客户集团 → 再点击展开年月维度</span></div>`;
+    `</select> <span class="muted">· 点击行展开客户集团 → 再点击展开年月维度 · 同比/环比比例为 ▲▼ 三角，绝对值保持 +/-</span></div>`;
   const groups = {};
   const custAll = state.page==='stf'?stfCustFiltered():state.page==='cc'?ccCustFiltered():state.page==='rpo'?rpoCustFiltered():custFiltered();
   for(const c of custAll){
-    const key = custTopLevel==='post'?(c.line==='OS'?'Oversea':c.line):custTopLevel==='ka'?(c.ka||'未分类'):c[custTopLevel];
+    const key = custTopLevel==='none'?c.name:custTopLevel==='post'?(c.line==='OS'?'Oversea':c.line):custTopLevel==='ka'?(c.ka||'未分类'):c[custTopLevel];
     (groups[key] = groups[key]||[]).push(c);
   }
   body += '<table><thead><tr><th>分组 / 客户集团 / 年月</th><th>客户数量</th><th>NFI</th><th>同期NFI</th><th>同比绝对值</th><th>同比</th><th>上期NFI</th><th>环比绝对值</th><th>环比</th></tr></thead><tbody>';
@@ -1627,26 +1711,32 @@ function openCustomerDetail(){
     const nfi = cs.reduce((s,c)=>s+c.nfi,0), cnt = cs.reduce((s,c)=>s+c.cnt,0);
     const prev = cs.reduce((s,c)=>s+c.nfi/(1+c.yoy),0), last = cs.reduce((s,c)=>s+c.nfi/(1+c.mom),0);
     const isOpen = open1===g;
-    body += `<tr class="row-expand" onclick="expandCd('CD:G','${g}')"><td>${isOpen?'▾ ':'▸ '}${g}</td><td>${cnt}</td><td>${fmtMoney2(nfi)}</td><td>${fmtMoney2(prev)}</td><td class="${cls(nfi-prev)}">${(nfi-prev>=0?'+':'')+fmtMoney2(nfi-prev)}</td><td>${yoySpan(nfi/prev-1)}</td><td>${fmtMoney2(last)}</td><td class="${cls(nfi-last)}">${(nfi-last>=0?'+':'')+fmtMoney2(nfi-last)}</td><td>${yoySpan(nfi/last-1)}</td></tr>`;
+    body += `<tr class="row-expand" onclick="expandCd('CD:G','${g}')"><td>${isOpen?'▾ ':'▸ '}${g}</td><td>${cnt}</td><td>${fmtMoney2(nfi)}</td><td>${fmtMoney2(prev)}</td><td class="${cls(nfi-prev)}">${(nfi-prev>=0?'+':'')+fmtMoney2(nfi-prev)}</td><td>${triPct(prev?nfi/prev-1:0)}</td><td>${fmtMoney2(last)}</td><td class="${cls(nfi-last)}">${(nfi-last>=0?'+':'')+fmtMoney2(nfi-last)}</td><td>${triPct(last?nfi/last-1:0)}</td></tr>`;
     if(isOpen){
       for(const c of cs){
         const cOpen = open2===g+'|'+c.name;
         const pv = c.nfi/(1+c.yoy), ls = c.nfi/(1+c.mom);
-        body += `<tr class="row-expand" style="background:#fafbfd" onclick="expandCd('CD:C','${g}|${c.name}')"><td style="padding-left:28px">${cOpen?'▾ ':'▸ '}${c.name}</td><td>${c.cnt}</td><td>${fmtMoney2(c.nfi)}</td><td>${fmtMoney2(pv)}</td><td class="${cls(c.nfi-pv)}">${(c.nfi-pv>=0?'+':'')+fmtMoney2(c.nfi-pv)}</td><td>${yoySpan(c.yoy)}</td><td>${fmtMoney2(ls)}</td><td class="${cls(c.nfi-ls)}">${(c.nfi-ls>=0?'+':'')+fmtMoney2(c.nfi-ls)}</td><td>${yoySpan(c.mom)}</td></tr>`;
+        body += `<tr class="row-expand" style="background:#fafbfd" onclick="expandCd('CD:C','${g}|${c.name}')"><td style="padding-left:28px">${cOpen?'▾ ':'▸ '}${c.name}</td><td>${c.cnt}</td><td>${fmtMoney2(c.nfi)}</td><td>${fmtMoney2(pv)}</td><td class="${cls(c.nfi-pv)}">${(c.nfi-pv>=0?'+':'')+fmtMoney2(c.nfi-pv)}</td><td>${triPct(c.yoy)}</td><td>${fmtMoney2(ls)}</td><td class="${cls(c.nfi-ls)}">${(c.nfi-ls>=0?'+':'')+fmtMoney2(c.nfi-ls)}</td><td>${triPct(c.mom)}</td></tr>`;
         if(cOpen){
           const period=selectedPeriods(), series=SERIES[c.line].nfi;
-          const totalWeight=period.reduce((v,i)=>v+series[i],0);
+          const totalWeight=period.reduce((v,i2)=>v+series[i2],0);
           for(const periodIndex of period){
             const mm=periodIndex%12+1, yy=2024+Math.floor(periodIndex/12);
             const v = totalWeight?c.nfi*series[periodIndex]/totalWeight:0;
-            body += `<tr style="color:#7a8699"><td style="padding-left:46px">${yy}-${String(mm).padStart(2,'0')}</td><td>—</td><td>${fmtMoney2(v)}</td><td>${fmtMoney2(v/(1+c.yoy))}</td><td>${(v-v/(1+c.yoy)>=0?'+':'')+fmtMoney2(v-v/(1+c.yoy))}</td><td>${yoySpan(c.yoy)}</td><td>${fmtMoney2(v/(1+c.mom))}</td><td>${(v-v/(1+c.mom)>=0?'+':'')+fmtMoney2(v-v/(1+c.mom))}</td><td>${yoySpan(c.mom)}</td></tr>`;
+            body += `<tr style="color:#7a8699"><td style="padding-left:46px">${yy}-${String(mm).padStart(2,'0')}</td><td>—</td><td>${fmtMoney2(v)}</td><td>${fmtMoney2(v/(1+c.yoy))}</td><td>${(v-v/(1+c.yoy)>=0?'+':'')+fmtMoney2(v-v/(1+c.yoy))}</td><td>${triPct(c.yoy)}</td><td>${fmtMoney2(v/(1+c.mom))}</td><td>${(v-v/(1+c.mom)>=0?'+':'')+fmtMoney2(v-v/(1+c.mom))}</td><td>${triPct(c.mom)}</td></tr>`;
           }
         }
       }
     }
   }
+  if(Object.keys(groups).length>1){
+    const all = Object.values(groups).flat();
+    const nfi = all.reduce((s,c)=>s+c.nfi,0), cnt = all.reduce((s,c)=>s+c.cnt,0);
+    const prev = all.reduce((s,c)=>s+c.nfi/(1+c.yoy),0), last = all.reduce((s,c)=>s+c.nfi/(1+c.mom),0);
+    body += `<tr class="summary-row"><td>合计</td><td>${cnt}</td><td>${fmtMoney2(nfi)}</td><td>${fmtMoney2(prev)}</td><td class="${cls(nfi-prev)}">${(nfi-prev>=0?'+':'')+fmtMoney2(nfi-prev)}</td><td>${triPct(prev?nfi/prev-1:0)}</td><td>${fmtMoney2(last)}</td><td class="${cls(nfi-last)}">${(nfi-last>=0?'+':'')+fmtMoney2(nfi-last)}</td><td>${triPct(last?nfi/last-1:0)}</td></tr>`;
+  }
   body += '</tbody></table>';
-  openModal('客户明细（Customer Report · Overall Analysis）',body,'Demo：客户集团可下钻至年月维度（点击展开）· 金额单位：'+state.unit);
+  openModal('客户明细（Customer Report · Overall Analysis）',body,'Demo：Top Level 可不选（客户集团直开）· 客户集团可下钻至年月维度（点击展开）· 同比/环比比例 ▲▼、绝对值 +/- · 底部合计行 · 金额单位：'+state.unit);
 }
 function expandCd(key,val){
   if(key==='CD:G'){ window.__cdg = (window.__cdg===val)?null:val; }
