@@ -1557,7 +1557,7 @@ function openOverdueDetail(mode){
   cs = cs.filter(c=>selected('custGroup',c.name));
   const i = curIdx(), mm = i%12+1, yy = 2024+Math.floor(i/12);
   const fut = n => { const t=mm+n, mo=((t-1)%12+1), y2=yy+Math.floor((t-1)/12); return y2+'-'+String(mo).padStart(2,'0'); };
-  const odRows = (kind) => {
+  const odTable = (kind) => {
     // kind: 'ar' 逾期应收（预计收款月份）| 'ub' 超期未开票（发薪月份）
     const groups = {};
     for(const c of cs){
@@ -1565,21 +1565,49 @@ function openOverdueDetail(mode){
       const gk = [odGrp.line?o.line:'', odGrp.team?o.team:'', odGrp.sub?o.sub:''].filter(Boolean).join(' / ');
       (groups[gk||''] = groups[gk||'']||[]).push({c,o});
     }
-    let h = '';
-    const months = kind==='ar'?[fut(1),fut(2),fut(3)]:[fut(-2),fut(-1),fut(0)] ;
+    // 展开月份从近到远（逾期应收为未来收款月，超期未开票为近月）
+    const months = kind==='ar'?[fut(1),fut(2),fut(3)]:[fut(0),fut(-1),fut(-2)];
+    const shares = [0.45,0.3,0.25];
+    let allCusts = [];
+    const gl = [];
     for(const gk in groups){
-      if(gk) h += `<tr style="background:#f0f4f8;font-weight:600"><td colspan="5">${gk}</td></tr>`;
-      for(const {c,o} of groups[gk]){
+      const custs = groups[gk].map(({c,o})=>{
         const hh = hash(c.name+kind);
-        const base = c.nfi*(kind==='ar'?0.25:0.15)*(0.5+(hh%10)/10);
-        h += `<tr><td style="padding-left:${gk?26:10}px">${c.name}</td><td>${fmtMoney2(c.nfi*(kind==='ar'?0.45:0.3)*(0.5+(hh%10)/10))}</td><td class="down">${fmtMoney2(base)}</td><td>${20+hh%60} 天</td><td>${30+(hh>>>2)%60} 天</td></tr>`;
-        for(let k=0;k<months.length;k++){
-          const sh = [0.45,0.3,0.25][k];
-          h += `<tr style="color:#7a8699"><td style="padding-left:${gk?42:26}px">${months[k]}</td><td>${fmtMoney2(c.nfi*0.3*sh)}</td><td>${fmtMoney2(base*sh)}</td><td>${20+((hh+k*7)%60)} 天</td><td>${30+((hh+k*5)%60)} 天</td></tr>`;
+        const amt = c.nfi*(kind==='ar'?0.25:0.15)*(0.5+(hh%10)/10);
+        const recv = c.nfi*(kind==='ar'?0.45:0.3)*(0.5+(hh%10)/10);
+        const mrows = months.map((mo,k)=>({mo, recv:recv*shares[k], amt:amt*shares[k], d1:20+((hh+k*7)%60), d2:30+((hh+k*5)%60)}));
+        return {name:c.name, amt, recv, d1:20+hh%60, d2:30+(hh>>>2)%60, mrows};
+      // 集团层排序：金额降序 → 截至目前应收降序 → 名称升序
+      }).sort((a,b)=>b.amt-a.amt || b.recv-a.recv || a.name.localeCompare(b.name,'zh'));
+      gl.push({gk, custs});
+      allCusts = allCusts.concat(custs);
+    }
+    gl.sort((a,b)=>b.custs.reduce((s,x)=>s+x.amt,0)-a.custs.reduce((s,x)=>s+x.amt,0));
+    const totAmt = allCusts.reduce((s,x)=>s+x.amt,0), totRecv = allCusts.reduce((s,x)=>s+x.recv,0);
+    // 占比：分母为当前筛选上下文金额总计，仅集团汇总行展示（月份行展示 —），保留两位小数
+    const pct = v => totAmt?(v/totAmt*100).toFixed(2)+'%':'—';
+    const NC = kind==='ar'?6:4;
+    let h = '';
+    for(const g of gl){
+      if(g.gk) h += `<tr style="background:#f0f4f8;font-weight:600"><td colspan="${NC}">${g.gk}</td></tr>`;
+      for(const x of g.custs){
+        h += kind==='ar'
+          ? `<tr><td style="padding-left:${g.gk?26:10}px">${x.name}</td><td>${fmtMoney2(x.recv)}</td><td class="down">${fmtMoney2(x.amt)}</td><td>${pct(x.amt)}</td><td>${x.d1} 天</td><td>${x.d2} 天</td></tr>`
+          : `<tr><td style="padding-left:${g.gk?26:10}px">${x.name}</td><td class="down">${fmtMoney2(x.amt)}</td><td>${pct(x.amt)}</td><td>${x.d1} 天</td></tr>`;
+        for(const m of x.mrows){
+          h += kind==='ar'
+            ? `<tr style="color:#7a8699"><td style="padding-left:${g.gk?42:26}px">${m.mo}</td><td>${fmtMoney2(m.recv)}</td><td>${fmtMoney2(m.amt)}</td><td>—</td><td>${m.d1} 天</td><td>${m.d2} 天</td></tr>`
+            : `<tr style="color:#7a8699"><td style="padding-left:${g.gk?42:26}px">${m.mo}</td><td>${fmtMoney2(m.amt)}</td><td>—</td><td>${m.d1} 天</td></tr>`;
         }
       }
     }
-    return h || '<tr><td colspan="5" class="muted" style="text-align:center;padding:16px">当前筛选范围无数据</td></tr>';
+    if(!allCusts.length) return {body:`<tr><td colspan="${NC}" class="muted" style="text-align:center;padding:16px">当前筛选范围无数据</td></tr>`, foot:''};
+    // 总计行：金额求和；占比在金额总计非 0 时为 100.00%；平均类按当前表内明细重新计算
+    const avg = f => Math.round(allCusts.reduce((s,x)=>s+f(x),0)/allCusts.length);
+    const foot = kind==='ar'
+      ? `<tr class="summary-row"><td>总计</td><td>${fmtMoney2(totRecv)}</td><td>${fmtMoney2(totAmt)}</td><td>${totAmt?'100.00%':'—'}</td><td>${avg(x=>x.d1)} 天</td><td>${avg(x=>x.d2)} 天</td></tr>`
+      : `<tr class="summary-row"><td>总计</td><td>${fmtMoney2(totAmt)}</td><td>${totAmt?'100.00%':'—'}</td><td>${avg(x=>x.d1)} 天</td></tr>`;
+    return {body:h, foot};
   };
   const sumAr = cs.reduce((s,c)=>s+c.nfi*0.25*(0.5+(hash(c.name+'ar')%10)/10),0);
   const sumUb = cs.reduce((s,c)=>s+c.nfi*0.15*(0.5+(hash(c.name+'ub')%10)/10),0);
@@ -1595,14 +1623,16 @@ function openOverdueDetail(mode){
   body += `<div style="margin-bottom:10px;font-size:12.5px">分组维度（逾期应收与超期未开票共用，可多选至三层，也可不选——不选时默认按 客户集团 / ${showAr?'预计收款月份':'发薪月份'} 打开）：${grpChips}</div>`;
   if(showAr){
     body += `<div style="font-weight:600;font-size:13px;margin:6px 0">逾期应收 · 按${odGrp.line||odGrp.team||odGrp.sub?'分组维度 + ':''}客户集团展开至预计收款月份</div>`;
-    body += '<table><thead><tr><th>客户集团 / 预计收款月份</th><th>截至目前应收</th><th>逾期金额</th><th>平均逾期天数</th><th>平均账期</th></tr></thead><tbody>'+odRows('ar')+'</tbody></table>';
+    const t = odTable('ar');
+    body += '<table><thead><tr><th>客户集团 / 预计收款月份</th><th>截至目前应收</th><th>逾期金额</th><th>逾期金额占比</th><th>平均逾期天数</th><th>平均账期</th></tr></thead><tbody>'+t.body+'</tbody><tfoot>'+t.foot+'</tfoot></table>';
   }
   if(showUb){
     body += `<div style="font-weight:600;font-size:13px;margin:14px 0 6px">超期未开票 · 按${odGrp.line||odGrp.team||odGrp.sub?'分组维度 + ':''}客户集团展开至发薪月份</div>`;
-    body += '<table><thead><tr><th>客户集团 / 发薪月份</th><th>截至目前应收</th><th>超期未开票金额</th><th>平均超期天数</th><th>平均账期</th></tr></thead><tbody>'+odRows('ub')+'</tbody></table>';
+    const t = odTable('ub');
+    body += '<table><thead><tr><th>客户集团 / 发薪月份</th><th>超期未开票金额</th><th>超期未开票金额占比</th><th>平均超期天数</th></tr></thead><tbody>'+t.body+'</tbody><tfoot>'+t.foot+'</tfoot></table>';
   }
   const t = state.page==='stf'?(mode==='ar'?'STF 看板「逾期金额」More：仅展示逾期应收与逾期应收明细模块。':mode==='ub'?'STF 看板「未开票金额」More：仅展示超期未开票与超期未开票明细模块。':''):'';
-  const foot = `${t}两张事实表独立汇总、不做逐行拼接；快照随总筛选器时间上下文（当前月最新快照 / 历史月 FIS 冻结快照）· Demo 模拟数据`;
+  const foot = `${t}两张事实表独立汇总、不做逐行拼接；占比按客户集团汇总行计算（分母为当前筛选上下文金额总计，保留两位小数，月份行展示 —，单一集团时为 100.00%）；总计行金额求和、平均类按当前表内明细重新计算；集团层按金额降序、月份从近到远 · 快照随总筛选器时间上下文（当前月最新快照 / 历史月 FIS 冻结快照）· Demo 模拟数据`;
   openModal(mode==='ar'?'逾期金额（逾期应收）明细':mode==='ub'?'未开票金额（超期未开票）明细':'逾期 & 未开票 · 资金明细页（复用 20.1 资金管理指标平台）',body,foot);
 }
 let netAddOrg = 'ALL';
