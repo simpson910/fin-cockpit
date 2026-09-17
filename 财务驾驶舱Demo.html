@@ -1408,7 +1408,7 @@ function renderBridge(){
   const nfi=a.nfi, gp=a.gp, npat=a.npat;
   // NFI → GP 扣减
   const gap1 = nfi-gp;
-  const csc = gap1*0.58;           // CSC后台业绩切分
+  const csc = gap1*0.58;           // 后台业绩切分（R09 = 所有后台业绩切分：CSC+TA后台+RPO自有；Demo 模拟单步数值）
   const ic  = gap1-csc;            // 内部成本（残差，确保勾稽）
   // GP → NPAT 扣减
   const gap2 = gp-npat;
@@ -1420,7 +1420,7 @@ function renderBridge(){
   // 运行余额（每个步骤之后的累计），顺序与开发文档 5.5.1 一致
   const steps = [
     {l:'NFI',               kind:'total', v:nfi,  run:nfi},
-    {l:'CSC后台业绩切分',     kind:'cost',  v:csc,  run:nfi-csc},
+    {l:'后台业绩切分',        kind:'cost',  v:csc,  run:nfi-csc},
     {l:'内部成本',           kind:'cost',  v:ic,   run:nfi-csc-ic},
     {l:'GP',                kind:'total', v:gp,   run:gp},
     {l:'增值税附加金额',       kind:'cost',  v:vat,  run:gp-vat},
