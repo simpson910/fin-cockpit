@@ -472,7 +472,7 @@ function monthAggAt(i){
   a.overdueAmt = a.overdue*0.6; a.unbilled = a.overdue*0.4;
   a.odHCPoint = a.hc*0.82*(1+0.015*Math.sin(i*1.7+0.5));
   a.odHC = a.hc*0.82; a.netAdd = (a.hc-a.hcPrev)*0.82;
-  a.loss = a.nfi*(0.028+0.004*Math.sin(i*0.7)); a.lossRate = a.nfi?a.loss/a.nfi:0;
+  a.loss = a.nfi*(0.028+0.004*Math.sin(i*0.7)); a.lossRate = (a.nfi+a.loss)?a.loss/(a.nfi+a.loss):0;
   a.offerAmt = a.rev*0.19; a.offerCount = Math.round(a.hc*0.16); a.offerAvg = a.offerCount?a.offerAmt/a.offerCount:0; a.offerPerHC = a.hc?a.offerAmt/a.hc:0;
   a.reportCount = Math.round(a.offerCount*5.8); a.interviewCount = Math.round(a.offerCount*2.4); a.reportToInterview = a.reportCount?a.interviewCount/a.reportCount:0; a.interviewToOffer = a.interviewCount?a.offerCount/a.interviewCount:0;
   a.reportPerInterview = a.interviewCount?a.reportCount/a.interviewCount:0; a.interviewPerOffer = a.offerCount?a.interviewCount/a.offerCount:0;
@@ -722,7 +722,7 @@ function sumMatrixNodes(nodes){
   for(const key of ['rev','nfi','hc','overdue','overdueAmt','unbilled','offerAmt','offerCount','reportCount','interviewCount','fixedRev','varRev','monthlyOnsite','odHCPoint','odHC','netAdd','loss']) n[key]=sum(key);
   n.nfiRate=div(n.nfi,n.rev);n.npatPct=weighted('npatPct','rev');n.npatPost=weighted('npatPost','rev');
   n.budgetPct=div(n.rev,nodes.reduce((v,x)=>v+(x.budgetPct?x.rev/x.budgetPct:0),0));
-  n.cph=div(n.nfi,n.hc);n.lossRate=div(n.loss,n.nfi);
+  n.cph=div(n.nfi,n.hc);n.lossRate=div(n.loss,n.nfi+n.loss);
   n.offerAvg=div(n.offerAmt,n.offerCount);n.offerPerHC=div(n.offerAmt,n.hc);
   n.reportToInterview=div(n.interviewCount,n.reportCount);n.interviewToOffer=div(n.offerCount,n.interviewCount);
   n.reportPerInterview=div(n.reportCount,n.interviewCount);n.interviewPerOffer=div(n.interviewCount,n.offerCount);
@@ -735,7 +735,7 @@ function sumMatrixNodes(nodes){
   n.npatY=n.npatPct-div(nodes.reduce((v,x)=>v+(x.npatPct-x.npatY)*(x.rev/(1+x.revY)),0),prevRev);
   n.npatPostY=n.npatPost-div(nodes.reduce((v,x)=>v+(x.npatPost-(x.npatPostY??x.npatY))*(x.rev/(1+x.revY)),0),prevRev);
   const prevCph=div(prevNfi,prevHc);n.cphY=prevCph?n.cph/prevCph-1:0;
-  n.lossRateY=n.lossRate-div(previous('loss','lossY'),prevNfi);
+  const prevLoss=previous('loss','lossY');n.lossRateY=n.lossRate-div(prevLoss,prevNfi+prevLoss);
   return n;
 }
 function customerTotalRow(list,allTotal,dimensions,contribution=false){
@@ -1124,8 +1124,8 @@ function singleStfNode(lineId,i,mult){
   n.loss = n.nfi*lr;
   const prevLoss = S.nfi[i-12]*mult*lrPrev;
   n.lossY = prevLoss ? (n.loss/prevLoss-1) : 0;
-  n.lossRate = lr;
-  n.lossRateY = lr-lrPrev;
+  n.lossRate = lr/(1+lr);
+  n.lossRateY = lr/(1+lr)-lrPrev/(1+lrPrev);
   n.overdueAmt = n.overdue*0.6; n.unbilled = n.overdue*0.4;
   return n;
 }
@@ -1760,7 +1760,7 @@ function openLossDetail(){
     `<label style="margin-right:12px;cursor:pointer"><input type="checkbox" ${lossGrp[k]?'checked':''} onchange="lossGrp.${k}=this.checked;lossOpen=null;openLossDetail()"> ${v}</label>`).join('');
   let body = '<div class="newtab-note">演示：新标签页打开 · 总损耗明细（仅展示总损耗≠0 的数据）· 携带当前筛选上下文 · 受 RLS 权限控制</div>';
   body += `<div style="margin-bottom:10px;font-size:12.5px">下钻维度（Team / Subteam / 时间维度可多选，不选时默认按 客户集团 展开；选中后第一层按所选维度聚合，下钻至 客户集团）：${chips}</div>`;
-  const pct = r => r.nfi?fmtPct(r.loss/r.nfi):'—';
+  const pct = r => (r.nfi+r.loss)?fmtPct(r.loss/(r.nfi+r.loss)):'—';
   const cells = r => `<td>${pct(r)}</td><td class="down">-${fmtMoney2(r.loss)}</td><td>${fmtMoney2(r.lz)}</td><td>${fmtMoney2(r.sq)}</td><td>${fmtMoney2(r.sb)}</td><td>${fmtMoney2(r.gs)}</td><td>${fmtMoney2(r.dg)}</td>`;
   body += `<table><thead><tr><th>${anyGrp?'分组维度 / 客户集团':'客户集团'}</th><th>总损耗NFI占比</th><th>总损耗</th><th>科锐承担离职补</th><th>三期成本</th><th>社保补缴金额</th><th>工伤成本</th><th>待岗成本</th></tr></thead><tbody>`;
   const groups = lossData();
@@ -1786,7 +1786,7 @@ function openLossDetail(){
     body += `<tr class="summary-row"><td>总计</td>${cells(tot)}</tr>`;
   }
   body += '</tbody></table>';
-  openModal('总损耗明细',body,'字段：总损耗NFI占比（总损耗/NFI）/ 客户集团 / 总损耗 / 科锐承担离职补 / 三期成本 / 社保补缴金额 / 工伤成本 / 待岗成本 · 下钻维度默认客户集团，Team/Subteam/时间维度可多选，选中后第一层按所选维度聚合、下钻至客户集团 · 最下方总计行（金额类求和，总损耗NFI占比 = 总损耗合计 / NFI 合计）· Demo 模拟数据');
+  openModal('总损耗明细',body,'字段：总损耗NFI占比（总损耗/(NFI+总损耗)，2026-09-17 业务确认，沿用现有 Measure #50 v2）/ 客户集团 / 总损耗 / 科锐承担离职补 / 三期成本 / 社保补缴金额 / 工伤成本 / 待岗成本 · 下钻维度默认客户集团，Team/Subteam/时间维度可多选，选中后第一层按所选维度聚合、下钻至客户集团 · 最下方总计行（金额类求和，总损耗NFI占比 = 总损耗合计 / (NFI 合计 + 总损耗合计)，分母为 0 显示 —）· Demo 模拟数据');
 }
 let custTopLevel = 'none';
 function openCustomerDetail(){
@@ -2094,7 +2094,7 @@ function combinePeriods(rows){
   for(const key of ['overdue','overdueAmt','unbilled','odHCPoint'])n[key]=rows[rows.length-1][key];
   n.nfiRate=ratio(n.nfi,n.rev);n.npatPct=ratio(rows.reduce((v,r)=>v+r.npatPct*r.rev,0),n.rev);
   n.npatPost=ratio(rows.reduce((v,r)=>v+r.npatPost*r.rev,0),n.rev);
-  n.budgetPct=ratio(n.rev,n.budgetAmount);n.cph=ratio(n.nfi,n.hc);n.lossRate=ratio(n.loss,n.nfi);
+  n.budgetPct=ratio(n.rev,n.budgetAmount);n.cph=ratio(n.nfi,n.hc);n.lossRate=ratio(n.loss,n.nfi+n.loss);
   n.offerAvg=ratio(n.offerAmt,n.offerCount);n.offerPerHC=ratio(n.offerAmt,n.hc);
   n.reportToInterview=ratio(n.interviewCount,n.reportCount);n.interviewToOffer=ratio(n.offerCount,n.interviewCount);
   n.reportPerInterview=ratio(n.reportCount,n.interviewCount);n.interviewPerOffer=ratio(n.interviewCount,n.offerCount);
