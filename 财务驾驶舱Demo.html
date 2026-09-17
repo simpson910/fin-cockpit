@@ -165,7 +165,7 @@ tr.summary-row td{background:#f0f4f8;font-weight:600;border-top:2px solid #dce2e
   <div class="hd" data-page-node-id="qfT8wxstwH3nv0lAj6tro3">
     <div class="hd-top" data-page-node-id="pgBDqgQvDslMLiPcpgihzu">
       <h1 data-page-node-id="SepZP2luDbra9QJ31SP3dn">Nexus 财务驾驶舱</h1>
-      <span class="demo-tag" data-page-node-id="VMdv7iJxAPjySnujPPQMBA">Demo · 模拟数据，仅用于交互演示</span>
+      <span class="demo-tag" data-page-node-id="VMdv7iJxAPjySnujPPQMBA">Demo · 模拟数据，仅说明布局与交互</span>
     </div>
     <div class="hd-note" data-page-node-id="eNgiqEh6UtR0fzBzR9nsIJ">总看板：集团经营健康吗？哪条业务线有问题？ · STF看板：STF 业务线为什么好/差？</div>
     <div class="filters" data-page-node-id="A06onzVhnSnWxEeOtpSJNW">
@@ -299,7 +299,7 @@ tr.summary-row td{background:#f0f4f8;font-weight:600;border-top:2px solid #dce2e
     <div class="bridge-box" id="bridge-chart" data-page-node-id="YytlkiXGXBapbW1hZUCH8I"></div>
   </div>
 
-  <div class="foot" data-page-node-id="1BrqDORByUL2gBPZCaq6DE">Nexus 财务驾驶舱一期 · 交互演示原型 —— 与《4.2 一期开发文档（优化版）》一期模块设计对应 · 数据均为模拟数据；风险提示模块纳入二期</div>
+  <div class="foot" data-page-node-id="1BrqDORByUL2gBPZCaq6DE">Nexus 财务驾驶舱一期 · 交互演示原型 —— 与《4.2 一期开发文档（优化版）》一期模块设计对应 · 数据均为模拟数据，模拟公式、写死枚举与固定比例不构成开发口径（见开发文档 0.1 口径优先级原则）；风险提示模块纳入二期</div>
 </div>
 
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()" data-page-node-id="tSXD1m05UbLKFXaVAKDfKY">
@@ -318,7 +318,7 @@ function idxOf(y,m){return (y-2024)*12+(m-1);}
 function hash(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h;}
 function vary(s){return 0.9+0.22*((hash(s)%1000)/1000);}
 
-/* 业务线口径配置（模拟） */
+/* 业务线口径配置（模拟；正式开发读数仓标准业务线字段原值，不写死枚举、不建映射表，见开发文档 4.0.1 与 0.1） */
 const LINE_CFG = {
   STF:{name:'STF（人力外包）',base:9200,g:0.06,nfiRate:0.26,nfiDrift:0.002,hc:1180,hcG:0.008,od:1350,budgetFactor:0.965,postAdj:0.012,seed:1},
   CC:{name:'CC（猎头）',base:5600,g:-0.045,nfiRate:0.38,nfiDrift:-0.004,hc:420,hcG:-0.01,od:980,budgetFactor:1.12,postAdj:0.035,seed:2},
