@@ -827,7 +827,8 @@ function renderCcOrder(){
   const sorted=vals.slice().sort((x,y)=>tab==='top'?y.v-x.v:x.v-y.v);
   const list=showAll?sorted:sorted.slice(0,10);
   const allTotal=vals.reduce((s,x)=>s+x.v,0);
-  const totalV=vals.reduce((s,x)=>s+x.v,0), totalPrev=vals.reduce((s,x)=>s+x.v/(1+x.y),0), totalY=totalPrev?(totalV/totalPrev-1):0;
+  // 合计仅针对当前展示行（TOP 10 / Bottom 10 / More 全部），占比分母为全部顾问——TOP 10 视图下合计不等于 100%（数据 ≤ 10 条时为 100%）
+  const totalV=list.reduce((s,x)=>s+x.v,0), totalPrev=list.reduce((s,x)=>s+x.v/(1+x.y),0), totalY=totalPrev?(totalV/totalPrev-1):0;
   const rows=list.map(x=>{const prev=x.v/(1+x.y),diff=x.v-prev;return `<tr><td>${x.n}</td><td>${fmtMoney(x.v)}</td><td class="${cls(diff)}">${(diff>=0?'+':'')+fmtMoney2(diff)}</td><td>${yoyChip(x.y)}</td><td>${(x.v/allTotal*100).toFixed(1)}%</td></tr>`;}).join('');
   const totalRow=`<tr style="font-weight:600;background:#f0f4f8"><td>合计</td><td>${fmtMoney(totalV)}</td><td class="${cls(totalV-totalPrev)}">${(totalV-totalPrev>=0?'+':'')+fmtMoney2(totalV-totalPrev)}</td><td>${yoyChip(totalY)}</td><td>${(totalV/allTotal*100).toFixed(1)}%</td></tr>`;
   const moreBtn=showAll?'':`<span class="tab" onclick="state.ccOrderShowAll=true;renderCcOrder();" style="cursor:pointer">More · 全部顾问</span>`;
