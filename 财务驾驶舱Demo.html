@@ -407,7 +407,8 @@ const METRICS = {
 const BASE_METRICS = ['rev','nfi','nfiRate','npatPct','npatPost','hc','cph','overdue'];
 const CC_METRICS = ['offerAmt','offerCount','offerAvg','offerPerHC','reportCount','interviewCount','reportToInterview','interviewToOffer','reportPerInterview','interviewPerOffer'];
 const RPO_METRICS = ['fixedRev','varRev','monthlyOnsite'];
-function pageMetricKeys(){return (state.page==='stf'?BASE_METRICS.concat(['odHCPoint','odHC','netAdd','loss','lossRate']):state.page==='cc'?BASE_METRICS.concat(CC_METRICS):state.page==='rpo'?BASE_METRICS.concat(RPO_METRICS):BASE_METRICS).filter(k=>k!=='npatPost'||state.role==='BuLeader');}
+/* 2026-09-18：CC/RPO 看板不含 NFI%（模块A 卡片、模块B 核心切片、趋势区同步移除；总看板与 STF 保留） */
+function pageMetricKeys(){return (state.page==='stf'?BASE_METRICS.concat(['odHCPoint','odHC','netAdd','loss','lossRate']):state.page==='cc'?BASE_METRICS.concat(CC_METRICS):state.page==='rpo'?BASE_METRICS.concat(RPO_METRICS):BASE_METRICS).filter(k=>k!=='npatPost'||state.role==='BuLeader').filter(k=>k!=='nfiRate'||(state.page!=='cc'&&state.page!=='rpo'));}
 
 /* ================= 状态 ================= */
 const state = {role:'BuLeader',unit:'千元',year:2026,month:8,line:'ALL',bu:'ALL',team:'ALL',head:'ALL',custGroup:'ALL',metric:'rev',trendDim:'month',custLine:'ALL',custTab:'top',page:'main',stfTeam:'ALL',ccTeam:'ALL',stfMatrixTab:'core',ccMatrixTab:'core',ccRegions:[],ccOrderTab:'top',ccOrderShowAll:false,ccOrderExpanded:new Set(),rpoKa:[],rpoMatrixTab:'core',rpoKaTab:'ka',rpoTeam:'ALL'};
@@ -635,13 +636,13 @@ function renderKPIs(){
   if(state.page==='cc'){
     const ccBiz=[{key:'offerAmt',label:'Offer金额'},{key:'offerCount',label:'人均月均Offer数',num:1,unit:'个'},{key:'offerAvg',label:'Offer均价'},{key:'offerPerHC',label:'人均Offer金额'}];
     const ccConv=[{key:'reportCount',label:'报告数',num:1},{key:'interviewCount',label:'一面数',num:1},{key:'reportToInterview',label:'报告→一面转化率',pct:1},{key:'interviewToOffer',label:'一面→Offer转化率',pct:1},{key:'reportPerInterview',label:'报告/一面比',ratio:1},{key:'interviewPerOffer',label:'一面/Offer比',ratio:1}];
-    const coreCards=cards.filter(c=>c.key!=='overdue').map(c=>{if(c.key==='hc')return{...c,label:'前后台HC'};if(c.key==='cph')return{...c,label:'综合人效'};return c;}).concat([{key:'overdue',label:'逾期金额',more:'overdueAmt'}]);
+    const coreCards=cards.filter(c=>c.key!=='overdue'&&c.key!=='nfiRate').map(c=>{if(c.key==='hc')return{...c,label:'前后台HC'};if(c.key==='cph')return{...c,label:'综合人效'};return c;}).concat([{key:'overdue',label:'逾期金额',more:'overdueAmt'}]);
     const row1=coreCards.slice(0,5), row2=coreCards.slice(5), N=5, cols=`grid-template-columns:repeat(${N},1fr)`;
     const ccNote = selectedPeriods().includes(idxOf(2026,8)) ? '<span class="kpi-biz-note">当月数据截止至T-1天</span>' : '';
     html=`<div class="kpi-grid" style="${cols}">${row1.map(cardHtml).join('')}</div><div class="kpi-grid" style="${cols};margin-top:10px">${row2.map(cardHtml).join('')}</div><div class="kpi-biz-title">业务线指标（CC）${ccNote}</div><div class="kpi-grid" style="${cols}">${ccBiz.map(cardHtml).join('')}</div><div class="kpi-biz-title">转化指标（CC）${ccNote}</div>${ccFunnelHtml(a,y,m)}`;
   } else if(state.page==='rpo'){
     const rpoBiz=[{key:'fixedRev',label:'固定收费收入'},{key:'varRev',label:'变动收费收入'},{key:'monthlyOnsite',label:'月均onsite',num:1,unit:'人'}];
-    const coreCards=cards.filter(c=>c.key!=='overdue').map(c=>{if(c.key==='hc')return{...c,label:'前后台HC'};if(c.key==='cph')return{...c,label:'综合人效'};return c;}).concat([{key:'overdue',label:'逾期金额',more:'overdueAmt'}]);
+    const coreCards=cards.filter(c=>c.key!=='overdue'&&c.key!=='nfiRate').map(c=>{if(c.key==='hc')return{...c,label:'前后台HC'};if(c.key==='cph')return{...c,label:'综合人效'};return c;}).concat([{key:'overdue',label:'逾期金额',more:'overdueAmt'}]);
     const row1=coreCards.slice(0,5), row2=coreCards.slice(5), N=5, cols=`grid-template-columns:repeat(${N},1fr)`;
     html=`<div class="kpi-grid" style="${cols}">${row1.map(cardHtml).join('')}</div><div class="kpi-grid" style="${cols};margin-top:10px">${row2.map(cardHtml).join('')}</div><div class="kpi-biz-title">业务线指标（RPO）</div><div class="kpi-grid" style="${cols}">${rpoBiz.map(cardHtml).join('')}</div>`;
   } else if(isStf){
@@ -926,11 +927,11 @@ function renderRpoMatrix(){
   const i=curIdx(), view=state.rpoMatrixTab, core=view==='core';
   const hier=scopedHierarchy('RPO'), isBu=state.role==='BuLeader';
   let head='<th>组织（点击下钻）</th>';
-  if(core) head+='<th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th>'+ (isBu?'<th>NPAT% 二次亏损后</th>':'') +'<th>前后台HC</th><th>综合人效</th><th>逾期金额</th>';
+  if(core) head+='<th>Rev</th><th>NFI</th><th>预算进度</th><th>NPAT%</th>'+ (isBu?'<th>NPAT% 二次亏损后</th>':'') +'<th>前后台HC</th><th>综合人效</th><th>逾期金额</th>';
   else head+='<th>固定收费收入</th><th>变动收费收入</th><th>月均onsite</th>';
   if(core) head+='<th>状态</th>';
   const metricKeys=core
-    ? ['rev','nfi','nfiRate','budgetPct','npatPct',...(isBu?['npatPost']:[]),'hc','cph','overdue']
+    ? ['rev','nfi','budgetPct','npatPct',...(isBu?['npatPost']:[]),'hc','cph','overdue']
     : RPO_METRICS;
   const rpoCells=(n,weight,totalPrev)=>{
     const prev=totalPrev||(i>=12?nodeMetrics('RPO',i-12,weight):null);
@@ -1084,13 +1085,13 @@ function renderCcMatrix(){
   const n=nodeMetrics('CC',i,1), core=view==='core', biz=view==='biz', conv=view==='conv';
   const hasReg = regions.length>0;
   let head=(hasReg?'<th>重点区域</th>':'')+'<th>组织（点击下钻）</th>';
-  if(core) head+='<th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th><th>前后台HC</th><th>综合人效</th><th>逾期金额</th>';
+  if(core) head+='<th>Rev</th><th>NFI</th><th>预算进度</th><th>NPAT%</th><th>前后台HC</th><th>综合人效</th><th>逾期金额</th>';
   if(biz) head+='<th>Offer金额</th><th>人均月均Offer数</th><th>Offer均价</th><th>人均Offer金额</th>';
   if(conv) head+='<th>报告数</th><th>一面数</th><th>报告→一面</th><th>一面→Offer</th><th>报告/一面比</th><th>一面/Offer比</th>';
   if(core) head+='<th>状态</th>';
   const scaled=(src,m)=>Object.assign({},src,{_previous:nodeMetrics('CC',i-12,m),rev:src.rev*m,nfi:src.nfi*m,hc:src.hc*m,overdue:src.overdue*m,offerAmt:src.offerAmt*m,offerCount:src.offerCount*m,offerAvg:src.offerAvg,offerPerHC:src.offerPerHC,reportCount:src.reportCount*m,interviewCount:src.interviewCount*m});
   const row=(name,area,mult,totalNode)=>{const nm=totalNode||scaled(n,mult);let h=`<tr>${hasReg?`<td>${area}</td>`:''}<td>${name}</td>`;
-    if(core) h+=`<td>${fmtMoney(nm.rev)}${yoyChip(n.revY)}</td><td>${fmtMoney(nm.nfi)}${yoyChip(n.nfiY)}</td><td>${fmtPct(n.nfiRate)}${yoyChip(n.rateY,1)}</td><td>${budgetBar(n.budgetPct)}</td><td>${fmtPct(n.npatPct)}${yoyChip(n.npatY,1)}</td><td>${Math.round(nm.hc)}${yoyChip(n.hcY)}</td><td>${fmtMoney2(nm.cph)}${yoyChip(n.cphY)}</td><td>${fmtMoney(nm.overdue)}${yoyChip(n.odY)}</td>`;
+    if(core) h+=`<td>${fmtMoney(nm.rev)}${yoyChip(n.revY)}</td><td>${fmtMoney(nm.nfi)}${yoyChip(n.nfiY)}</td><td>${budgetBar(n.budgetPct)}</td><td>${fmtPct(n.npatPct)}${yoyChip(n.npatY,1)}</td><td>${Math.round(nm.hc)}${yoyChip(n.hcY)}</td><td>${fmtMoney2(nm.cph)}${yoyChip(n.cphY)}</td><td>${fmtMoney(nm.overdue)}${yoyChip(n.odY)}</td>`;
     if(biz) for(const k of ['offerAmt','offerCount','offerAvg','offerPerHC']) h+=`<td>${ccMatrixCell(nm,k)}</td>`;
     if(conv) for(const k of ['reportCount','interviewCount','reportToInterview','interviewToOffer','reportPerInterview','interviewPerOffer']) h+=`<td>${ccMatrixCell(nm,k)}</td>`;
     return h+(core?`<td><span class="light ${lightOf(n.budgetPct,n.rateY)}"></span></td>`:'')+'</tr>';};
@@ -1489,7 +1490,7 @@ function renderRoleBanner(){
   document.getElementById('role-banner').innerHTML =
     `<span><b>当前角色：${multiState.role.map(k=>ROLES[k].label).join('、')}</b> · 已选期间：${periodCaption()}</span>
      <span>当前页面：<b>${state.page==='stf'?'STF看板（STF 业务线）':state.page==='cc'?'CC看板（CC 业务线）':state.page==='rpo'?'RPO看板（RPO 业务线）':'总看板'}</b></span>
-     <span>KPI 卡片：<b>${r.kpi} 个</b>${r.kpi===9?'（含 NPAT% 二次亏损后）':''}</span>
+     <span>KPI 卡片：<b>${(state.page==='cc'||state.page==='rpo')?r.kpi-1:r.kpi} 个</b>${r.kpi===9?'（含 NPAT% 二次亏损后）':''}</span>
      <span>模块B 下钻起点：<b>${startName}</b></span>`;
 }
 
