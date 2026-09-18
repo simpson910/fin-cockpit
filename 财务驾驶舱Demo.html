@@ -770,7 +770,7 @@ function renderMatrix(){
   if(state.page==='rpo'){renderRpoMatrix();return;}
   if(state.page==='stf'){renderStfMatrix();return;}
   const i = curIdx(), isBuL = state.role==='BuLeader';
-  let html = `<thead><tr><th>组织（点击下钻）</th><th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th>${isBuL?'<th>NPAT% 二次亏损后</th>':''}<th>前台HC</th><th>人效</th><th>逾期&未开票</th><th>状态</th></tr></thead><tbody>`;
+  let html = `<thead><tr><th>组织（点击下钻）</th><th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th>${isBuL?'<th>NPAT% 二次亏损后</th>':''}<th>前台HC</th><th>前台人效</th><th>逾期 & 未开票</th><th>状态</th></tr></thead><tbody>`;
   const roots=[];
   for(const id of activeLines()){
     const f = lineFactor(id), mult = f;
@@ -1083,15 +1083,16 @@ function renderCcMatrix(){
   const i=curIdx(), future=+state.year>2026||(+state.year===2026&&+state.month>8), view=state.ccMatrixTab, regions=state.ccRegions||[];
   if(future){document.getElementById('matrix').innerHTML='<tbody><tr><td class="muted" style="padding:20px">未来时间暂无 CC 实际经营数据</td></tr></tbody>';return;}
   const n=nodeMetrics('CC',i,1), core=view==='core', biz=view==='biz', conv=view==='conv';
+  const isBu=state.role==='BuLeader';
   const hasReg = regions.length>0;
   let head=(hasReg?'<th>重点区域</th>':'')+'<th>组织（点击下钻）</th>';
-  if(core) head+='<th>Rev</th><th>NFI</th><th>预算进度</th><th>NPAT%</th><th>前后台HC</th><th>综合人效</th><th>逾期金额</th>';
+  if(core) head+='<th>Rev</th><th>NFI</th><th>预算进度</th><th>NPAT%</th>'+ (isBu?'<th>NPAT% 二次亏损后</th>':'') +'<th>前后台HC</th><th>综合人效</th><th>逾期金额</th>';
   if(biz) head+='<th>Offer金额</th><th>人均月均Offer数</th><th>Offer均价</th><th>人均Offer金额</th>';
-  if(conv) head+='<th>报告数</th><th>一面数</th><th>报告→一面</th><th>一面→Offer</th><th>报告/一面比</th><th>一面/Offer比</th>';
+  if(conv) head+='<th>报告数</th><th>一面数</th><th>报告→一面转化率</th><th>一面→Offer转化率</th><th>报告/一面比</th><th>一面/Offer比</th>';
   if(core) head+='<th>状态</th>';
   const scaled=(src,m)=>Object.assign({},src,{_previous:nodeMetrics('CC',i-12,m),rev:src.rev*m,nfi:src.nfi*m,hc:src.hc*m,overdue:src.overdue*m,offerAmt:src.offerAmt*m,offerCount:src.offerCount*m,offerAvg:src.offerAvg,offerPerHC:src.offerPerHC,reportCount:src.reportCount*m,interviewCount:src.interviewCount*m});
   const row=(name,area,mult,totalNode)=>{const nm=totalNode||scaled(n,mult);let h=`<tr>${hasReg?`<td>${area}</td>`:''}<td>${name}</td>`;
-    if(core) h+=`<td>${fmtMoney(nm.rev)}${yoyChip(n.revY)}</td><td>${fmtMoney(nm.nfi)}${yoyChip(n.nfiY)}</td><td>${budgetBar(n.budgetPct)}</td><td>${fmtPct(n.npatPct)}${yoyChip(n.npatY,1)}</td><td>${Math.round(nm.hc)}${yoyChip(n.hcY)}</td><td>${fmtMoney2(nm.cph)}${yoyChip(n.cphY)}</td><td>${fmtMoney(nm.overdue)}${yoyChip(n.odY)}</td>`;
+    if(core) h+=`<td>${fmtMoney(nm.rev)}${yoyChip(n.revY)}</td><td>${fmtMoney(nm.nfi)}${yoyChip(n.nfiY)}</td><td>${budgetBar(n.budgetPct)}</td><td>${fmtPct(n.npatPct)}${yoyChip(n.npatY,1)}</td>${isBu?`<td>${fmtPct(nm.npatPost)}${yoyChip(nm.npatPostY??nm.npatY,1)}</td>`:''}<td>${Math.round(nm.hc)}${yoyChip(n.hcY)}</td><td>${fmtMoney2(nm.cph)}${yoyChip(n.cphY)}</td><td>${fmtMoney(nm.overdue)}${yoyChip(n.odY)}</td>`;
     if(biz) for(const k of ['offerAmt','offerCount','offerAvg','offerPerHC']) h+=`<td>${ccMatrixCell(nm,k)}</td>`;
     if(conv) for(const k of ['reportCount','interviewCount','reportToInterview','interviewToOffer','reportPerInterview','interviewPerOffer']) h+=`<td>${ccMatrixCell(nm,k)}</td>`;
     return h+(core?`<td><span class="light ${lightOf(n.budgetPct,n.rateY)}"></span></td>`:'')+'</tr>';};
@@ -1162,9 +1163,9 @@ function renderStfMatrix(){
   if(view==='core'){
     heads += '<th>Rev</th><th>NFI</th><th>NFI%</th><th>预算进度</th><th>NPAT%</th>';
     if(isBuL) heads += '<th>NPAT% 二次亏损后</th>';
-    heads += '<th>前台HC</th><th>人效</th><th>逾期金额</th><th>未开票金额</th>';
+    heads += '<th>前台HC</th><th>前台人效</th><th>逾期金额</th><th>未开票金额</th>';
   } else {
-    heads += '<th>外包时点在职</th><th>外包日均在职</th><th>外包净增</th><th>总损耗</th><th>总损耗NFI占比</th>';
+    heads += '<th>外包时点在职人数</th><th>外包日均在职人数</th><th>外包净增人数</th><th>总损耗金额</th><th>总损耗NFI占比</th>';
   }
   if(view==='core') heads += '<th>状态</th>';
   let html = `<thead><tr>${heads}</tr></thead><tbody>`;
